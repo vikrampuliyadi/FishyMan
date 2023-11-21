@@ -31,6 +31,8 @@ export class Assignment4 extends Scene {
         ambient: 0.5,
         texture: new Texture("assets/sky_three.jpeg"),
       }),
+      wood: new Material(textured,
+        {ambient: 0.9, diffusivity: .9, texture: new Texture("assets/wood2.jpg")}),
     };
 
     this.light_view_target = vec4(0, 0, 0, 1); // Declare light_view_target
@@ -62,12 +64,9 @@ export class Assignment4 extends Scene {
     let model_transform = Mat4.identity();
 
     // // Draw water background
-    // let background_transform = model_transform.times(Mat4.scale(60, 60, 60))
-    //   .times(Mat4.rotation(0, 0, 1, 0))
-    //   .times(Mat4.rotation(Math.PI / 1.8, 1, 0, 0))
-    //   .times(Mat4.rotation(t / 40000, 0, 1, 0));
-    //
-    // this.shapes.sphere.draw(context, program_state, background_transform, this.materials.water);
+    let background_transform = model_transform.times(Mat4.scale(70, 70, 70))
+
+    this.shapes.sphere.draw(context, program_state, background_transform, this.materials.wood);
 
     let ocean_transform = model_transform.times(Mat4.rotation(1, 1, 1, 0))
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
