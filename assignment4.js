@@ -112,11 +112,10 @@ export class Assignment4 extends Scene {
             dt = program_state.animation_delta_time / 1000;
         let model_transform = Mat4.identity();
 
-        let fish_transform = model_transform.times(
-            Mat4.scale(2, 2, 2)
-                .times(Mat4.rotation(t, Math.PI, 1, 0, 0))
-                .times(Mat4.translation(7, 0, 5))
-        );
+        let fish_transform = model_transform.times(Mat4.translation(10, 0, -20))
+                .times(Mat4.scale(2, 2, 2))
+                .times(Mat4.rotation(t * 4, Math.PI, 1, 0, 0))
+                .times(Mat4.translation(7, 0, 5));
 
         this.shapes.fish.draw(
             context,
