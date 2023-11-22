@@ -68,6 +68,21 @@ export class Assignment4 extends Scene {
         diffusivity: 0.6,
         color: hex_color("800080"),
       }),
+      fish2: new Material(new defs.Phong_Shader(), {
+        ambient: 0.4,
+        diffusivity: 0.6,
+        color: hex_color("#FFA500"),
+      }),
+      fish3: new Material(new defs.Phong_Shader(), {
+        ambient: 0.4,
+        diffusivity: 0.6,
+        color: hex_color("#00FF00"),
+      }),
+      fish4: new Material(new defs.Phong_Shader(), {
+        ambient: 0.4,
+        diffusivity: 0.6,
+        color: hex_color("#FF0000"),
+      }),
     };
 
     this.light_view_target = vec4(0, 0, 0, 1); // Declare light_view_target
@@ -110,6 +125,7 @@ export class Assignment4 extends Scene {
       dt = program_state.animation_delta_time / 1500;
     let t2 = program_state.animation_time / 1500 + 0.5,
       dt2 = program_state.animation_delta_time / 1500;
+    let t3 = program_state.animation_time / 1500 + 0.8;
     let model_transform = Mat4.identity();
 
     let fish_transform = model_transform.times(Mat4.translation(10, 0, -20))
@@ -132,7 +148,31 @@ export class Assignment4 extends Scene {
       context,
       program_state,
       fish_transform2,
-      this.materials.fish
+      this.materials.fish2
+    );
+
+    let fish_transform3 = model_transform.times(Mat4.translation(30, -25, 5))
+      .times(Mat4.scale(2, 2, 2))
+      .times(Mat4.rotation(t2 * 4, Math.PI, 1, 0, 0))
+      .times(Mat4.translation(7, 0, 5));
+
+    this.shapes.fish.draw(
+      context,
+      program_state,
+      fish_transform3,
+      this.materials.fish3
+    );
+
+    let fish_transform4 = model_transform.times(Mat4.translation(27, -15, -5))
+      .times(Mat4.scale(2, 2, 2))
+      .times(Mat4.rotation(t3 * 4, Math.PI, 1, 0, 0))
+      .times(Mat4.translation(7, 0, 5));
+
+    this.shapes.fish.draw(
+      context,
+      program_state,
+      fish_transform4,
+      this.materials.fish4
     );
 
     // // Draw water background
