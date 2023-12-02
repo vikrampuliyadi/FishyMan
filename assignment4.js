@@ -44,8 +44,9 @@ export class Assignment4 extends Scene {
 
     this.materials = {
       water: new Material(textured, {
-        ambient: 0.5,
-        texture: new Texture("assets/water.jpeg"),
+        ambient: 0.6,
+        smoothness: 64,
+        texture: new Texture("assets/ocean.png"),
       }),
       sand: new Material(textured, {
         ambient: 0.3,
@@ -55,8 +56,12 @@ export class Assignment4 extends Scene {
         texture: new Texture("assets/sand3.png"),
         light_depth_texture: null,
       }),
-      sky: new Material(textured,
-        {ambient: 0.9, diffusivity: 0.9, color: hex_color("#87CEEB"), texture: new Texture("assets/sky_three.jpeg")}),
+      sky: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 0.9,
+        //color: hex_color("#87CEEB"),
+        texture: new Texture("assets/sky_with_cloud.png"),
+      }),
       wood: new Material(textured, {
         ambient: 0.9,
         diffusivity: 0.9,
@@ -83,6 +88,12 @@ export class Assignment4 extends Scene {
         diffusivity: 0.6,
         color: hex_color("#FF0000"),
       }),
+      ocean_rotate: new Material(new Texture_Scroll_X(), {
+        color: hex_color("#000000"),
+        ambient: 1.0,
+
+        texture: new Texture("assets/ocean.png", "LINEAR_MIPMAP_LINEAR"),
+      }),
     };
 
     this.light_view_target = vec4(0, 0, 0, 1); // Declare light_view_target
@@ -92,6 +103,12 @@ export class Assignment4 extends Scene {
       vec3(0, 0, 0),
       vec3(0, 0, 1)
     );
+
+    this.ocean_transform = Mat4.identity()
+      .times(Mat4.rotation(1, 1, 1, 0))
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+      .times(Mat4.translation(0, 0, 2))
+      .times(Mat4.scale(100, 100, 1));
   }
 
   make_control_panel() {
@@ -117,9 +134,7 @@ export class Assignment4 extends Scene {
 
     // Set up directional light
     const light_position = vec4(0, 10, 0, 0); // Directional light from above
-    program_state.lights = [
-      new Light(light_position, color(1, 1, 1, 1), 1000),
-    ];
+    program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
 
     let t = program_state.animation_time / 1500,
       dt = program_state.animation_delta_time / 1500;
@@ -128,7 +143,8 @@ export class Assignment4 extends Scene {
     let t3 = program_state.animation_time / 1500 + 0.8;
     let model_transform = Mat4.identity();
 
-    let fish_transform = model_transform.times(Mat4.translation(10, 0, -20))
+    let fish_transform = model_transform
+      .times(Mat4.translation(10, 0, -20))
       .times(Mat4.scale(2, 2, 2))
       .times(Mat4.rotation(t * 4, Math.PI, 1, 0, 0))
       .times(Mat4.translation(7, 0, 5));
@@ -139,7 +155,8 @@ export class Assignment4 extends Scene {
       fish_transform,
       this.materials.fish
     );
-    let fish_transform2 = model_transform.times(Mat4.translation(25, 0, -30))
+    let fish_transform2 = model_transform
+      .times(Mat4.translation(25, 0, -30))
       .times(Mat4.scale(2, 2, 2))
       .times(Mat4.rotation(t2 * 4, Math.PI, 1, 0, 0))
       .times(Mat4.translation(7, 0, 5));
@@ -151,7 +168,8 @@ export class Assignment4 extends Scene {
       this.materials.fish2
     );
 
-    let fish_transform3 = model_transform.times(Mat4.translation(30, -25, 5))
+    let fish_transform3 = model_transform
+      .times(Mat4.translation(30, -25, 5))
       .times(Mat4.scale(2, 2, 2))
       .times(Mat4.rotation(t2 * 4, Math.PI, 1, 0, 0))
       .times(Mat4.translation(7, 0, 5));
@@ -163,7 +181,8 @@ export class Assignment4 extends Scene {
       this.materials.fish3
     );
 
-    let fish_transform4 = model_transform.times(Mat4.translation(27, -15, -5))
+    let fish_transform4 = model_transform
+      .times(Mat4.translation(27, -15, -5))
       .times(Mat4.scale(2, 2, 2))
       .times(Mat4.rotation(t3 * 4, Math.PI, 1, 0, 0))
       .times(Mat4.translation(7, 0, 5));
@@ -176,9 +195,7 @@ export class Assignment4 extends Scene {
     );
 
     // // Draw water background
-    let background_transform = model_transform.times(
-      Mat4.scale(70, 70, 70)
-    );
+    let background_transform = model_transform.times(Mat4.scale(70, 70, 70));
 
     this.shapes.sphere.draw(
       context,
@@ -187,17 +204,20 @@ export class Assignment4 extends Scene {
       this.materials.sky
     );
 
-    let ocean_transform = model_transform
-      .times(Mat4.rotation(1, 1, 1, 0))
-      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
-      .times(Mat4.translation(0, 0, 2))
-      .times(Mat4.scale(100, 100, 1));
+    let box_1_rad = (Math.PI / 50) * dt;
+
+    this.ocean_transform = this.ocean_transform.times(
+      Mat4.rotation(box_1_rad, 1, 0, 0)
+    );
+
     //
     this.shapes.sphere.draw(
       context,
       program_state,
-      ocean_transform,
-      this.materials.water
+      this.ocean_transform,
+      this.materials.water.override({
+        ambient: 0.1 * Math.sin(1.3 * t) + 0.7,
+      })
     );
 
     // Draw sand sphere
@@ -212,6 +232,41 @@ export class Assignment4 extends Scene {
       program_state,
       sand_transform,
       this.materials.sand
+    );
+  }
+}
+
+class Texture_Scroll_X extends Textured_Phong {
+  // TODO:  Modify the shader below (right now it's just the same fragment shader as Textured_Phong) for requirement #6.
+  fragment_glsl_code() {
+    return (
+      this.shared_glsl_code() +
+      `
+            varying vec2 f_tex_coord;
+            uniform sampler2D texture;
+            uniform float animation_time;
+            
+            void main(){
+                // Sample the texture image in the correct place:
+
+
+                float slide_translation = mod(animation_time, 4.) * 2.; 
+                mat4 slide_matrix = mat4(vec4(-1., 0., 0., 0.), 
+                                   vec4( 0., 1., 0., 0.), 
+                                   vec4( 0., 0., 1., 0.), 
+                                   vec4(slide_translation, 0., 0., 1.)); 
+
+                vec4 new_tex_coord = vec4(f_tex_coord, 0, 0) + vec4(1., 1., 0., 1.); 
+                new_tex_coord = slide_matrix * new_tex_coord; 
+
+                vec4 tex_color = texture2D(texture, new_tex_coord.xy);
+
+                
+                      // Compute an initial (ambient) color:
+                gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
+                                                                         // Compute the final color with contributions from lights:
+                gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+        } `
     );
   }
 }
