@@ -38,9 +38,10 @@ export class Assignment4 extends Scene {
         [0, 1],
       ]),
       fish: new Shape_From_File("assets/fish.obj"),
+      island: new Shape_From_File("assets/palm_tree_chest_island/palm_tree_chest_island.obj"),
     };
 
-    const textured = new Textured_Phong(1); // Use Textured_Phong shader
+    const textured = new Textured_Phong(1);
 
     this.materials = {
       water: new Material(textured, {
@@ -55,8 +56,12 @@ export class Assignment4 extends Scene {
         texture: new Texture("assets/sand3.png"),
         light_depth_texture: null,
       }),
-      sky: new Material(textured,
-        {ambient: 0.9, diffusivity: 0.9, color: hex_color("#87CEEB"), texture: new Texture("assets/sky_three.jpeg")}),
+      sky: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 0.9,
+        color: hex_color("#87CEEB"),
+        texture: new Texture("assets/sky_three.jpeg"),
+      }),
       wood: new Material(textured, {
         ambient: 0.9,
         diffusivity: 0.9,
@@ -85,13 +90,15 @@ export class Assignment4 extends Scene {
       }),
     };
 
-    this.light_view_target = vec4(0, 0, 0, 1); // Declare light_view_target
+    this.light_view_target = vec4(0, 0, 0, 1);
 
+    // Change the initial camera location to face left, down, and north
     this.initial_camera_location = Mat4.look_at(
-      vec3(0, -20, 0),
-      vec3(0, 0, 0),
-      vec3(0, 0, 1)
+      vec3(30, 30, 20),   // eye position
+      vec3(0, 2, 10),      // at position (where the camera is looking)
+      vec3(0, 0, 1)      // up vector (defines the "up" direction in your scene)
     );
+
   }
 
   make_control_panel() {
@@ -103,20 +110,18 @@ export class Assignment4 extends Scene {
       this.children.push(
         (context.scratchpad.controls = new defs.Movement_Controls())
       );
-      program_state.set_camera(Mat4.translation(-3.13, -5.05, -25.24));
+      program_state.set_camera(this.initial_camera_location);
       //facing east down north
     }
 
-    // Set the background color (light blue)
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4,
       context.width / context.height,
       1,
-      100
+      1000
     );
 
-    // Set up directional light
-    const light_position = vec4(0, 10, 0, 0); // Directional light from above
+    const light_position = vec4(-3, -18, -90, 0);
     program_state.lights = [
       new Light(light_position, color(1, 1, 1, 1), 1000),
     ];
@@ -128,7 +133,8 @@ export class Assignment4 extends Scene {
     let t3 = program_state.animation_time / 1500 + 0.8;
     let model_transform = Mat4.identity();
 
-    let fish_transform = model_transform.times(Mat4.translation(10, 0, -20))
+    let fish_transform = model_transform
+      .times(Mat4.translation(10, 0, -20))
       .times(Mat4.scale(2, 2, 2))
       .times(Mat4.rotation(t * 4, Math.PI, 1, 0, 0))
       .times(Mat4.translation(7, 0, 5));
@@ -139,7 +145,9 @@ export class Assignment4 extends Scene {
       fish_transform,
       this.materials.fish
     );
-    let fish_transform2 = model_transform.times(Mat4.translation(25, 0, -30))
+
+    let fish_transform2 = model_transform
+      .times(Mat4.translation(100, 0, -120))
       .times(Mat4.scale(2, 2, 2))
       .times(Mat4.rotation(t2 * 4, Math.PI, 1, 0, 0))
       .times(Mat4.translation(7, 0, 5));
@@ -151,7 +159,8 @@ export class Assignment4 extends Scene {
       this.materials.fish2
     );
 
-    let fish_transform3 = model_transform.times(Mat4.translation(30, -25, 5))
+    let fish_transform3 = model_transform
+      .times(Mat4.translation(30, -25, 5))
       .times(Mat4.scale(2, 2, 2))
       .times(Mat4.rotation(t2 * 4, Math.PI, 1, 0, 0))
       .times(Mat4.translation(7, 0, 5));
@@ -163,7 +172,8 @@ export class Assignment4 extends Scene {
       this.materials.fish3
     );
 
-    let fish_transform4 = model_transform.times(Mat4.translation(27, -15, -5))
+    let fish_transform4 = model_transform
+      .times(Mat4.translation(27, -15, -5))
       .times(Mat4.scale(2, 2, 2))
       .times(Mat4.rotation(t3 * 4, Math.PI, 1, 0, 0))
       .times(Mat4.translation(7, 0, 5));
@@ -175,9 +185,9 @@ export class Assignment4 extends Scene {
       this.materials.fish4
     );
 
-    // // Draw water background
+    // Draw water background
     let background_transform = model_transform.times(
-      Mat4.scale(70, 70, 70)
+      Mat4.scale(200, 200, 200)
     );
 
     this.shapes.sphere.draw(
@@ -188,11 +198,9 @@ export class Assignment4 extends Scene {
     );
 
     let ocean_transform = model_transform
-      .times(Mat4.rotation(1, 1, 1, 0))
-      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.translation(0, 0, 2))
-      .times(Mat4.scale(100, 100, 1));
-    //
+      .times(Mat4.scale(300, 300, 1));
+
     this.shapes.sphere.draw(
       context,
       program_state,
@@ -202,8 +210,7 @@ export class Assignment4 extends Scene {
 
     // Draw sand sphere
     let sand_transform = model_transform
-      .times(Mat4.rotation(1, 1, 1, 0))
-      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+
       .times(Mat4.translation(2, 2, 2))
       .times(Mat4.scale(10, 10, 3));
 
