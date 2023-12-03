@@ -38,18 +38,18 @@ export class Assignment4 extends Scene {
         [0, 1],
       ]),
       fish: new Shape_From_File("assets/fish.obj"),
-      island: new Shape_From_File("assets/palm_tree_chest_island/palm_tree_chest_island.obj"),
+      tree: new Shape_From_File("assets/palm.obj"),
     };
 
     const textured = new Textured_Phong(1);
 
     this.materials = {
       water: new Material(textured, {
-        ambient: 0.5,
+        ambient: 0.8,
         texture: new Texture("assets/water.jpeg"),
       }),
       sand: new Material(textured, {
-        ambient: 0.3,
+        ambient: 0.6,
         diffusivity: 0.9,
         color: hex_color("#ffaf40"),
         smoothness: 64,
@@ -58,7 +58,7 @@ export class Assignment4 extends Scene {
       }),
       sky: new Material(textured, {
         ambient: 0.9,
-        diffusivity: 0.9,
+        diffusivity: 1,
         color: hex_color("#87CEEB"),
         texture: new Texture("assets/sky_three.jpeg"),
       }),
@@ -69,24 +69,29 @@ export class Assignment4 extends Scene {
       }),
 
       fish: new Material(new defs.Phong_Shader(), {
-        ambient: 0.4,
+        ambient: 0.7,
         diffusivity: 0.6,
         color: hex_color("800080"),
       }),
       fish2: new Material(new defs.Phong_Shader(), {
-        ambient: 0.4,
+        ambient: 0.7,
         diffusivity: 0.6,
         color: hex_color("#FFA500"),
       }),
       fish3: new Material(new defs.Phong_Shader(), {
-        ambient: 0.4,
+        ambient: 0.7,
         diffusivity: 0.6,
         color: hex_color("#00FF00"),
       }),
       fish4: new Material(new defs.Phong_Shader(), {
-        ambient: 0.4,
+        ambient: 0.7,
         diffusivity: 0.6,
         color: hex_color("#FF0000"),
+      }),
+      tree: new Material( textured, {
+        ambient: 0.7,
+        diffusivity: 0.6,
+        texture: new Texture("assets/palm1_uv_m2.bmp")
       }),
     };
 
@@ -210,7 +215,6 @@ export class Assignment4 extends Scene {
 
     // Draw sand sphere
     let sand_transform = model_transform
-
       .times(Mat4.translation(2, 2, 2))
       .times(Mat4.scale(10, 10, 3));
 
@@ -219,6 +223,17 @@ export class Assignment4 extends Scene {
       program_state,
       sand_transform,
       this.materials.sand
+    );
+    let tree_transform = model_transform
+      .times(Mat4.translation(5, 5, 10)) // Set the position of the tree
+      .times(Mat4.scale(2, 2, 2)) // Set the scale of the tree
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0)); // Rotate around the y-axis
+
+    this.shapes.tree.draw(
+      context,
+      program_state,
+      tree_transform,
+      this.materials.tree
     );
   }
 }
