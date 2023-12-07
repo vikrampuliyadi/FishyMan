@@ -1,5 +1,6 @@
 import { defs, tiny } from "./examples/common.js";
 import { Shape_From_File } from "./examples/obj-file-demo.js";
+import { FishermanScene } from "./FishermanScene.js";
 
 const {
   Vector,
@@ -40,6 +41,8 @@ export class Assignment4 extends Scene {
       fish: new Shape_From_File("assets/fish.obj"),
       tree: new Shape_From_File("assets/palm.obj"),
     };
+
+    this.fisherman = new FishermanScene();
 
     const textured = new Textured_Phong(1);
 
@@ -197,14 +200,14 @@ export class Assignment4 extends Scene {
         program_state.set_camera(this.initial_camera_location);
       } else {
         //FisherMan POV looking left and right wiggling
-        const animationDuration = 20.0; // Adjust this duration as needed
+        const animationDuration = 30.0; // Adjust this duration as needed
 
         // Calculate the normalized time within the animation duration
         let normalizedTime = (t % animationDuration) / animationDuration;
 
-        // Use the normalized time to create a continuous oscillating movement
-        let maxAngle = Math.PI / 8; // 45 degrees
-        let angle = normalizedTime * 2 * Math.PI; // Make one full cycle within the animation duration
+        // Use the normalized time to create a limited oscillating movement (45 degrees left to right)
+        let maxAngle = Math.PI / 4; // 45 degrees
+        let angle = normalizedTime * maxAngle * 2; // Make one full cycle within the animation duration
 
         // Update the camera position based on the sine function
         let eye_position = vec3(
@@ -237,7 +240,6 @@ export class Assignment4 extends Scene {
         } else {
           //Fisherman POV but not wiggling
 
-          //TODO: SWITCH BETWEEN POV OF CAMERA AND FISHERMAN
           this.initial_camera_location = Mat4.look_at(
             vec3(5, 10.9, 6), // eye position
             vec3(-3, -5, 10), // at position (where the camera is looking)
