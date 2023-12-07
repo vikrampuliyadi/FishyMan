@@ -107,7 +107,7 @@ export class Assignment4 extends Scene {
 
     // Change the initial camera location to face left, down, and north
     this.initial_camera_location = Mat4.look_at(
-      vec3(30, 30, 20), // eye position
+      vec3(30, -20, 10), // eye position
       vec3(0, 2, 10), // at position (where the camera is looking)
       vec3(0, 0, 1) // up vector (defines the "up" direction in your scene)
     );
@@ -117,10 +117,17 @@ export class Assignment4 extends Scene {
       //.times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.translation(0, 0, 2))
       .times(Mat4.scale(300, 300, 1));
+
+    this.isAnimation = true;
   }
 
   make_control_panel() {
     // TODO: Implement requirement #5 using a key_triggered_button that responds to the 'c' key.
+    this.key_triggered_button(
+      "Pause/Start Animation",
+      ["Control", "0"],
+      () => (this.isAnimation = !this.isAnimation)
+    );
   }
 
   display(context, program_state) {
@@ -148,6 +155,32 @@ export class Assignment4 extends Scene {
       dt2 = program_state.animation_delta_time / 1500;
     let t3 = program_state.animation_time / 1500 + 0.8;
     let model_transform = Mat4.identity();
+
+    if (this.isAnimation == true) {
+      //Make viewing matrix rotate so that it rotates around the island
+      const animationDuration = 20.0; // Adjust this duration as needed
+
+      // Calculate the normalized time within the animation duration
+      let normalizedTime = (t % animationDuration) / animationDuration;
+
+      // Use the normalized time to create an oscillating movement
+      let angle = normalizedTime * 2 * Math.PI;
+
+      // Update the camera position based on the sine function
+      let eye_position = vec3(30 * Math.cos(angle), 30 * Math.sin(angle), 20);
+      let at_position = vec3(0, 2, 10);
+      let up_vector = vec3(0, 0, 1);
+
+      // Update the initial camera location matrix
+      this.initial_camera_location = Mat4.look_at(
+        eye_position,
+        at_position,
+        up_vector
+      );
+
+      // Set the updated camera matrix for rendering
+      program_state.set_camera(this.initial_camera_location);
+    }
 
     let fish_transform = model_transform
       .times(Mat4.translation(10, 0, -20))
