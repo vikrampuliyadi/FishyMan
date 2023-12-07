@@ -42,6 +42,8 @@ export class Assignment4 extends Scene {
             tree: new Shape_From_File("assets/palm.obj"),
         };
 
+        this.fisherman = new FishermanScene();
+
         const textured = new Textured_Phong(1);
 
         this.materials = {
@@ -122,7 +124,7 @@ export class Assignment4 extends Scene {
             .times(Mat4.translation(0, 0, 2))
             .times(Mat4.scale(300, 300, 1));
 
-        this.isAnimation = true;
+        this.isAnimation = false;
     }
 
     make_control_panel() {
@@ -293,6 +295,8 @@ export class Assignment4 extends Scene {
             tree_transform,
             this.materials.tree
         );
+
+        this.fisherman.display(context, program_state);
     }
 }
 

@@ -61,8 +61,8 @@ export class FishermanScene extends Scene {
         ];
 
         // Apply translation to move the entire figure up
-        let model_transform = Mat4.rotation(Math.PI / 4, 1, 0, 0).times(
-            Mat4.translation(0, 5, 5)
+        let model_transform = Mat4.rotation(Math.PI / 2, 1, 0, 0).times(
+            Mat4.translation(0, 4, 7).times(Mat4.scale(0.3, 0.3, 0.3))
         );
 
         this.drawStickFigure(context, program_state, model_transform);
@@ -93,8 +93,8 @@ export class FishermanScene extends Scene {
 
         // Draw left arm
         let left_arm_transform = model_transform
-            .times(Mat4.translation(-1.5, 1.5, 1))
-            .times(Mat4.rotation(-Math.PI / 2, 1, 0, 0))
+            .times(Mat4.translation(-1.5, 1, 0.5))
+            .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0))
             .times(Mat4.scale(0.5, 1.5, 0.5));
         this.shapes.leftArm.draw(
             context,
@@ -105,8 +105,8 @@ export class FishermanScene extends Scene {
 
         // Draw right arm
         let right_arm_transform = model_transform
-            .times(Mat4.translation(1.5, 1.5, 1))
-            .times(Mat4.rotation(-Math.PI / 2, 1, 0, 0))
+            .times(Mat4.translation(1.5, 1, 0.5))
+            .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0))
             .times(Mat4.scale(0.5, 1.5, 0.5));
         this.shapes.rightArm.draw(
             context,
