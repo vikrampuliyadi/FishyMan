@@ -119,7 +119,7 @@ export class FishermanScene extends Scene {
 
         // Draw left arm
         let left_arm_transform = model_transform
-            .times(Mat4.translation(-1.5, 1, 0.5))
+            .times(Mat4.translation(-1.5, 0.5, 0.5))
             .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0))
             .times(Mat4.scale(0.5, 1.5, 0.5));
         this.shapes.leftArm.draw(
@@ -129,10 +129,23 @@ export class FishermanScene extends Scene {
             this.materials.limb
         );
 
-        // Draw right arm
+        let translation_distance =
+            1.5 * Math.sin(program_state.animation_time / 1000);
+
+        // Draw right arm with both rotation and translation
+        // Draw right arm with both rotation and translation
+        // Draw right arm with both rotation and translation
+        let right_arm_rotation_angle =
+            1 * Math.sin(program_state.animation_time / 1000); // Adjusted rotation range
+        let right_arm_pivot_translation = Mat4.translation(
+            -0.5, // X-coordinate to move the pivot point to the left end
+            -0.5, // Y-coordinate (no vertical movement)
+            0 // Z-coordinate (no depth movement)
+        );
         let right_arm_transform = model_transform
-            .times(Mat4.translation(1.5, 1, 0.5))
-            .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0))
+            .times(Mat4.translation(2, 3.25, 0.25)) // Translate back to the original position
+            .times(right_arm_pivot_translation) // Move the pivot point
+            .times(Mat4.rotation(right_arm_rotation_angle, 1, 0, 0)) // Rotate around the pivot
             .times(Mat4.scale(0.5, 1.5, 0.5));
         this.shapes.rightArm.draw(
             context,

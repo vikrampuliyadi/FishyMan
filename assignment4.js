@@ -123,7 +123,11 @@ export class Assignment4 extends Scene {
             .times(Mat4.translation(0, 0, 2))
             .times(Mat4.scale(300, 300, 1));
 
-        this.isAnimation = false;
+        this.isAnimation = true;
+        this.isAerial = true;
+        this.hasPositioned = false;
+
+        console.log(this.initial_camera_location);
     }
 
     make_control_panel() {
@@ -131,8 +135,20 @@ export class Assignment4 extends Scene {
         this.key_triggered_button(
             "Pause/Start Animation",
             ["Control", "0"],
-            () => (this.isAnimation = !this.isAnimation)
+            () => {
+                this.isAnimation = !this.isAnimation;
+                this.hasPositioned = false;
+            }
         );
+
+        this.key_triggered_button("Switch POV", ["Control", "1"], () => {
+            this.isAerial = !this.isAerial;
+            this.hasPositioned = false;
+        });
+        this.key_triggered_button("Debug", ["Control", "2"], () => {
+            console.log(this.initial_camera_location);
+            //this.isAnimation = false;
+        });
     }
 
     display(context, program_state) {
@@ -163,34 +179,89 @@ export class Assignment4 extends Scene {
         let t3 = program_state.animation_time / 1500 + 0.8;
         let model_transform = Mat4.identity();
 
-        if (this.isAnimation == true) {
-            //Make viewing matrix rotate so that it rotates around the island
-            const animationDuration = 20.0; // Adjust this duration as needed
+        if (this.isAnimation) {
+            if (this.isAerial) {
+                //Make viewing matrix rotate so that it rotates around the island
+                const animationDuration = 30.0; // Adjust this duration as needed
 
-            // Calculate the normalized time within the animation duration
-            let normalizedTime = (t % animationDuration) / animationDuration;
+                // Calculate the normalized time within the animation duration
+                let normalizedTime =
+                    (t % animationDuration) / animationDuration;
 
-            // Use the normalized time to create an oscillating movement
-            let angle = normalizedTime * 2 * Math.PI;
+                // Use the normalized time to create an oscillating movement
+                let angle = normalizedTime * 2 * Math.PI;
 
-            // Update the camera position based on the sine function
-            let eye_position = vec3(
-                30 * Math.cos(angle),
-                30 * Math.sin(angle),
-                20
-            );
-            let at_position = vec3(0, 2, 10);
-            let up_vector = vec3(0, 0, 1);
+                // Update the camera position based on the sine function
+                let eye_position = vec3(
+                    30 * Math.cos(angle),
+                    -20 * Math.sin(angle),
+                    10
+                );
+                let at_position = vec3(0, 2, 10);
+                let up_vector = vec3(0, 0, 1);
 
-            // Update the initial camera location matrix
-            this.initial_camera_location = Mat4.look_at(
-                eye_position,
-                at_position,
-                up_vector
-            );
+                // Update the initial camera location matrix
+                this.initial_camera_location = Mat4.look_at(
+                    eye_position,
+                    at_position,
+                    up_vector
+                );
+                program_state.set_camera(this.initial_camera_location);
+            } else {
+                //FisherMan POV looking left and right wiggling
+                const animationDuration = 30.0; // Adjust this duration as needed
 
-            // Set the updated camera matrix for rendering
-            program_state.set_camera(this.initial_camera_location);
+                // Calculate the normalized time within the animation duration
+                let normalizedTime =
+                    (t % animationDuration) / animationDuration;
+
+                // Use the normalized time to create a limited oscillating movement (45 degrees left to right)
+                let maxAngle = Math.PI / 4; // 45 degrees
+                let angle = normalizedTime * maxAngle * 2; // Make one full cycle within the animation duration
+
+                // Update the camera position based on the sine function
+                let eye_position = vec3(
+                    5 + 5 * Math.cos(angle), // Adjust the initial x-coordinate and amplitude as needed
+                    10.9, // Keep the initial y-coordinate constant for no vertical motion
+                    6
+                );
+                let at_position = vec3(-3, -5, 10); // Adjust the "at" position as needed
+                let up_vector = vec3(0, 0, 1);
+
+                // Update the initial camera location matrix
+                this.initial_camera_location = Mat4.look_at(
+                    eye_position,
+                    at_position,
+                    up_vector
+                );
+                program_state.set_camera(this.initial_camera_location);
+            }
+        } else {
+            //No movement
+            if (!this.hasPositioned) {
+                if (this.isAerial) {
+                    //Original Camera locatoin
+                    this.initial_camera_location = Mat4.look_at(
+                        vec3(30, -20, 10), // eye position
+                        vec3(0, 2, 10), // at position (where the camera is looking)
+                        vec3(0, 0, 1) // up vector (defines the "up" direction in your scene)
+                    );
+                    program_state.set_camera(this.initial_camera_location);
+                } else {
+                    //Fisherman POV but not wiggling
+
+                    this.initial_camera_location = Mat4.look_at(
+                        vec3(5, 10.9, 6), // eye position
+                        vec3(-3, -5, 10), // at position (where the camera is looking)
+                        vec3(0, 0, 1) // up vector (defines the "up" direction in your scene))
+                    );
+                    program_state.set_camera(this.initial_camera_location);
+                }
+                this.hasPositioned = true;
+            } else {
+                //do nothing since if it has been positioned alr, we let
+                //users do freely with camera
+            }
         }
 
         let fish_transform = model_transform
@@ -257,7 +328,7 @@ export class Assignment4 extends Scene {
             this.materials.sky
         );
 
-        let box_1_rad = (Math.PI / 50) * dt;
+        let box_1_rad = (Math.PI / 100) * dt;
 
         this.ocean_transform = this.ocean_transform.times(
             Mat4.rotation(box_1_rad, 1, 0, 0)
