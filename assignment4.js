@@ -48,7 +48,6 @@ export class Assignment4 extends Scene {
 
         this.materials = {
             water: new Material(textured, {
-                ambient: 0.6,
                 smoothness: 64,
                 ambient: 0.8,
                 texture: new Texture("assets/ocean.png"),
@@ -276,7 +275,7 @@ export class Assignment4 extends Scene {
         // Draw sand sphere
         let sand_transform = model_transform
             .times(Mat4.translation(2, 2, 2))
-            .times(Mat4.scale(10, 10, 3));
+            .times(Mat4.scale(20, 20, 3));
 
         this.shapes.sphere.draw(
             context,

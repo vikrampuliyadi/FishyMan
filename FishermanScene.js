@@ -12,7 +12,6 @@ const {
     Shape,
     Material,
     Scene,
-    Texture,
 } = tiny;
 
 const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
@@ -24,27 +23,32 @@ export class FishermanScene extends Scene {
 
         this.shapes = {
             head: new Subdivision_Sphere(3),
-            body: new Cube(),
+            torso: new Cube(),
             leftArm: new Cube(),
             rightArm: new Cube(),
-            leftLeg: new Cube(),
-            rightLeg: new Cube(),
+            legs: new Cube(),
+            leftFoot: new Cube(),
+            rightFoot: new Cube(),
         };
 
         const phong_shader = new Textured_Phong(1);
 
         this.materials = {
-            body: new Material(phong_shader, {
-                ambient: 0.5,
-                color: hex_color("#6e6e6e"), // Dark gray
+            torso: new Material(new defs.Phong_Shader(), {
+                ambient: 0.8,
+                color: hex_color("#A3C4EB"), // Dark gray
             }),
-            head: new Material(phong_shader, {
-                ambient: 0.5,
-                color: hex_color("#f4c542"), // Yellowish
+            legs: new Material(new defs.Phong_Shader(), {
+              ambient: 0.8,
+              color: hex_color("#FFFFFF"), // Dark gray
             }),
-            limb: new Material(phong_shader, {
-                ambient: 0.5,
-                color: hex_color("#6e6e6e"), // Dark gray
+            head: new Material(new defs.Phong_Shader(), {
+                ambient: 0.8,
+                color: hex_color("#FFDBAC"), // Yellowish
+            }),
+            limb: new Material(new defs.Phong_Shader(), {
+                ambient: 0.8,
+                color: hex_color("#FFDBAC"), // Light brown
             }),
         };
 
@@ -62,7 +66,7 @@ export class FishermanScene extends Scene {
 
         // Apply translation to move the entire figure up
         let model_transform = Mat4.rotation(Math.PI / 2, 1, 0, 0).times(
-            Mat4.translation(0, 4, 7).times(Mat4.scale(0.3, 0.3, 0.3))
+            Mat4.translation(0, 6, 7).times(Mat4.scale(.6, 0.6, 0.6))
         );
 
         this.drawStickFigure(context, program_state, model_transform);
@@ -71,7 +75,7 @@ export class FishermanScene extends Scene {
     drawStickFigure(context, program_state, model_transform) {
         // Draw head
         let head_transform = model_transform
-            .times(Mat4.translation(0, 2.75, 0.5))
+            .times(Mat4.translation(0, 3, 0.5))
             .times(Mat4.scale(0.8, 0.8, 0.8));
         this.shapes.head.draw(
             context,
@@ -82,14 +86,36 @@ export class FishermanScene extends Scene {
 
         // Draw body
         let body_transform = model_transform
-            .times(Mat4.translation(0, 0, 0))
-            .times(Mat4.scale(1, 2, 0.5));
-        this.shapes.body.draw(
+            .times(Mat4.translation(0, 1.2, 0))
+            .times(Mat4.scale(1, 1.2, 0.5));
+        this.shapes.torso.draw(
             context,
             program_state,
             body_transform,
-            this.materials.body
+            this.materials.torso
         );
+
+        // Draw left_leg
+        let left_leg_transform = model_transform
+          .times(Mat4.translation(0.7, -1, 0))
+          .times(Mat4.scale(0.5, 1, 0.5));
+        this.shapes.legs.draw(
+          context,
+          program_state,
+          left_leg_transform,
+          this.materials.legs
+        );
+
+      // Draw right_leg
+      let right_leg_transform = model_transform
+        .times(Mat4.translation(-.7, -1, 0))
+        .times(Mat4.scale(0.5, 1, 0.5));
+      this.shapes.legs.draw(
+        context,
+        program_state,
+        right_leg_transform,
+        this.materials.legs
+      );
 
         // Draw left arm
         let left_arm_transform = model_transform
@@ -115,27 +141,27 @@ export class FishermanScene extends Scene {
             this.materials.limb
         );
 
-        // Draw left leg
-        let left_leg_transform = model_transform
+        // Draw left foot
+        let left_foot_transform = model_transform
             .times(Mat4.translation(-0.75, -3, 0))
             .times(Mat4.rotation(Math.PI / 16, 1, 0, 0))
-            .times(Mat4.scale(0.5, 1.5, 0.5));
-        this.shapes.leftLeg.draw(
+            .times(Mat4.scale(0.5, 1, 0.5));
+        this.shapes.leftFoot.draw(
             context,
             program_state,
-            left_leg_transform,
+          left_foot_transform,
             this.materials.limb
         );
 
-        // Draw right leg
-        let right_leg_transform = model_transform
+        // Draw right foot
+        let right_foot_transform = model_transform
             .times(Mat4.translation(0.75, -3, 0))
             .times(Mat4.rotation(Math.PI / 16, 1, 0, 0))
-            .times(Mat4.scale(0.5, 1.5, 0.5));
-        this.shapes.rightLeg.draw(
+            .times(Mat4.scale(0.5, 1, 0.5));
+        this.shapes.rightFoot.draw(
             context,
             program_state,
-            right_leg_transform,
+          right_foot_transform,
             this.materials.limb
         );
     }
