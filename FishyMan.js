@@ -25,6 +25,22 @@ const {
   Textured_Phong_Shader,
 } = defs;
 
+function getRandomNumber(min, max) {
+  return Math.random() * (max - min) + min;
+}
+function getRandomColor() {
+  return color(Math.random(), Math.random(), Math.random(), 1.0);
+}
+
+function angleBetweenVectors(v, w) {
+  const dotProduct = v.dot(w);
+  const magnitude1 = v.norm();
+  const magnitude2 = w.norm();
+  const cosineTheta = dotProduct / (magnitude1 * magnitude2);
+  const angleInRadians = Math.acos(cosineTheta);
+  return angleInRadians;
+}
+
 export class FishyMan extends Scene {
   constructor() {
     super();
@@ -71,21 +87,10 @@ export class FishyMan extends Scene {
         diffusivity: 0.9,
         texture: new Texture("assets/wood2.jpg"),
       }),
-
-      fish: new Material(new defs.Phong_Shader(), {
-        ambient: 0.7,
-        diffusivity: 0.6,
-        color: hex_color("800080"),
-      }),
-      fish2: new Material(new defs.Phong_Shader(), {
-        ambient: 0.7,
-        diffusivity: 0.6,
-        color: hex_color("#FFA500"),
-      }),
       fish3: new Material(new defs.Phong_Shader(), {
-        ambient: 0.7,
-        diffusivity: 0.6,
-        color: hex_color("#00FF00"),
+        ambient: 1,
+        diffusivity: 1,
+        color: hex_color("#FF0000"),
       }),
       fish4: new Material(new defs.Phong_Shader(), {
         ambient: 0.7,
@@ -150,6 +155,30 @@ export class FishyMan extends Scene {
     this.hasPositioned = false;
 
     console.log(this.initial_camera_location);
+
+    this.fish_positions = [];
+    this.fish_transforms = [];
+    this.color_array = [];
+    this.deltas = []; // [x, y, next_t]
+    // spawn fish
+    for (let i = 0; i <= 100; i++) {
+      let randomX = getRandomNumber(-70, 70);
+      while (randomX <= 5 && randomX >= -5) {
+        randomX = getRandomNumber(-70, 70);
+      }
+      let randomY = getRandomNumber(-70, 70);
+      while (randomY <= 5 && randomY >= -5) {
+        randomY = getRandomNumber(-70, 70);
+      }
+
+      this.deltas.push([0,0,0]);
+
+      this.color_array.push(getRandomColor());
+      this.fish_positions.push(vec3(randomX, randomY, 2.7));
+      this.fish_transforms.push(Mat4.identity()
+        .times(Mat4.translation(randomX, randomY, 2.7))
+        .times(Mat4.scale(Math.random() + 0.8, Math.random() + 0.8, Math.random() + 0.8)));
+    }
   }
 
   make_control_panel() {
@@ -466,31 +495,33 @@ export class FishyMan extends Scene {
             }
           }
 
-          let fish_transform = model_transform
-            .times(Mat4.translation(10, 0, -20))
-            .times(Mat4.scale(2, 2, 2))
-            .times(Mat4.rotation(t * 4, Math.PI, 1, 0, 0))
-            .times(Mat4.translation(7, 0, 5));
+    for (let i = 0; i <= 100; i++) {
+      //store old t, change dir at new t generated
+      if (Math.floor(t) == Math.floor(this.deltas[i][2])) {
+        this.deltas[i][0] = getRandomNumber(-1, 1);
+        this.deltas[i][1] = getRandomNumber(-1, 1);
+        this.deltas[i][2] = t + getRandomNumber(1,3);
+      }
+      let old_x = this.fish_positions[i][0];
+      let old_y = this.fish_positions[i][1];
+      let new_x = this.fish_positions[i][0] + this.deltas[i][0] * dt * 4;
+      let new_y = this.fish_positions[i][1] + this.deltas[i][1] * dt * 4;
+      this.fish_positions[i][0] = new_x;
+      this.fish_positions[i][1] = new_y;
+      // Update the translation part of the fish transformation
+      this.fish_transforms[i] = Mat4.identity()
+        .times(Mat4.translation(new_x, new_y, 2.7))
+        .times(Mat4.rotation(angleBetweenVectors(vec3(1, 0, 0), vec3(this.deltas[i][0], this.deltas[i][1], 0)), 0, 0, 1));
 
-          this.shapes.fish.draw(
-            context,
-            program_state,
-            fish_transform,
-            this.materials.fish
-          );
-
-          let fish_transform2 = model_transform
-            .times(Mat4.translation(100, 0, -120))
-            .times(Mat4.scale(2, 2, 2))
-            .times(Mat4.rotation(t2 * 4, Math.PI, 1, 0, 0))
-            .times(Mat4.translation(7, 0, 5));
-
-          this.shapes.fish.draw(
-            context,
-            program_state,
-            fish_transform2,
-            this.materials.fish2
-          );
+      this.shapes.fish.draw(
+        context,
+        program_state,
+        this.fish_transforms[i],
+        this.materials.fish3.override({
+          color: this.color_array[i]
+        })
+      );
+    }
 
           let fish_transform3 = model_transform
             .times(Mat4.translation(30, -25, 5))
