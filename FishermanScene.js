@@ -12,7 +12,6 @@ const {
     Shape,
     Material,
     Scene,
-    Texture,
 } = tiny;
 
 const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
@@ -25,11 +24,12 @@ export class FishermanScene extends Scene {
         this.shapes = {
             //fisherman
             head: new Subdivision_Sphere(3),
-            body: new Cube(),
+            torso: new Cube(),
             leftArm: new Cube(),
             rightArm: new Cube(),
-            leftLeg: new Cube(),
-            rightLeg: new Cube(),
+            legs: new Cube(),
+            leftFoot: new Cube(),
+            rightFoot: new Cube(),
 
             //fishing rod
             handle: new Subdivision_Sphere(4),
@@ -41,17 +41,38 @@ export class FishermanScene extends Scene {
         const phong_shader = new Textured_Phong(1);
 
         this.materials = {
-            body: new Material(phong_shader, {
-                ambient: 0.5,
-                color: hex_color("#6e6e6e"), // Dark gray
+            torso: new Material(new defs.Phong_Shader(), {
+                ambient: 0.8,
+                color: hex_color("#A3C4EB"), // Dark gray
             }),
-            head: new Material(phong_shader, {
-                ambient: 0.5,
-                color: hex_color("#f4c542"), // Yellowish
+            legs: new Material(new defs.Phong_Shader(), {
+              ambient: 0.8,
+              color: hex_color("#FFFFFF"), // Dark gray
             }),
-            limb: new Material(phong_shader, {
-                ambient: 0.5,
-                color: hex_color("#6e6e6e"), // Dark gray
+            head: new Material(new defs.Phong_Shader(), {
+                ambient: 0.8,
+                color: hex_color("#FFDBAC"), // Yellowish
+            }),
+            limb: new Material(new defs.Phong_Shader(), {
+                ambient: 0.8,
+                color: hex_color("#FFDBAC"), // Light brown
+            }),
+
+            //fishing rod
+            rod: new Material(new defs.Phong_Shader(), {
+                ambient: 0.7,
+                diffusivity: 0.6,
+                color: hex_color("#8B4513"), // Brown
+            }),
+            lure: new Material(new defs.Phong_Shader(), {
+                ambient: 0.7,
+                diffusivity: 0.6,
+                color: hex_color("#FF0000"), // Red color for the lure
+            }),
+            string: new Material(new defs.Phong_Shader(), {
+                ambient: 0.7,
+                diffusivity: 0.6,
+                color: hex_color("#000000"), // Black color for the string
             }),
 
             //fishing rod
@@ -91,7 +112,7 @@ export class FishermanScene extends Scene {
 
         // Apply translation to move the entire figure up
         let model_transform = Mat4.rotation(Math.PI / 2, 1, 0, 0).times(
-            Mat4.translation(0, 4, 7).times(Mat4.scale(0.3, 0.3, 0.3))
+            Mat4.translation(0, 6, 7).times(Mat4.scale(.6, 0.6, 0.6))
         );
 
         this.drawStickFigure(context, program_state, model_transform);
@@ -103,7 +124,7 @@ export class FishermanScene extends Scene {
         const t = program_state.animation_time / 1000;
 
         //let handle_transform = Mat4.identity().times(Mat4.translation(0, 0, 8)).times(Mat4.scale(0.5, 0.5, 1.5));
-        let handle_transform = this.right_arm_transform.times(Mat4.translation(0,1.3,0)).times(Mat4.scale(1,0.3,2));
+        let handle_transform = this.right_arm_transform.times(Mat4.translation(0,1.2,0)).times(Mat4.scale(1,0.2,1.5));
         let shaft_transform = handle_transform.times(Mat4.translation(0,0,-4)).times(Mat4.scale(0.4, 0.4, 5));
         let lure_transform = shaft_transform.times(Mat4.translation(0,-7,0)).times(Mat4.scale(1,1,0.05));
 
@@ -116,7 +137,7 @@ export class FishermanScene extends Scene {
     drawStickFigure(context, program_state, model_transform) {
         // Draw head
         this.head_transform = model_transform
-            .times(Mat4.translation(0, 2.75, 0.5))
+            .times(Mat4.translation(0, 3, 0.5))
             .times(Mat4.scale(0.8, 0.8, 0.8));
         this.shapes.head.draw(
             context,
@@ -127,14 +148,36 @@ export class FishermanScene extends Scene {
 
         // Draw body
         this.body_transform = model_transform
-            .times(Mat4.translation(0, 0, 0))
-            .times(Mat4.scale(1, 2, 0.5));
-        this.shapes.body.draw(
+            .times(Mat4.translation(0, 1.2, 0))
+            .times(Mat4.scale(1, 1.2, 0.5));
+        this.shapes.torso.draw(
             context,
             program_state,
             this.body_transform,
-            this.materials.body
+            this.materials.torso
         );
+
+        // Draw left_leg
+        let left_leg_transform = model_transform
+          .times(Mat4.translation(0.7, -1, 0))
+          .times(Mat4.scale(0.5, 1, 0.5));
+        this.shapes.legs.draw(
+          context,
+          program_state,
+          left_leg_transform,
+          this.materials.legs
+        );
+
+      // Draw right_leg
+      let right_leg_transform = model_transform
+        .times(Mat4.translation(-.7, -1, 0))
+        .times(Mat4.scale(0.5, 1, 0.5));
+      this.shapes.legs.draw(
+        context,
+        program_state,
+        right_leg_transform,
+        this.materials.legs
+      );
 
         // Draw left arm
         this.left_arm_transform = model_transform
@@ -158,11 +201,11 @@ export class FishermanScene extends Scene {
             1 * Math.sin(program_state.animation_time / 1000); // Adjusted rotation range
         let right_arm_pivot_translation = Mat4.translation(
             -0.5, // X-coordinate to move the pivot point to the left end
-            -0.5, // Y-coordinate (no vertical movement)
-            0 // Z-coordinate (no depth movement)
+            -translation_distance / 10, // Y-coordinate (no vertical movement)
+            translation_distance // Z-coordinate (no depth movement)
         );
         this.right_arm_transform = model_transform
-            .times(Mat4.translation(2, 3.25, 0.25)) // Translate back to the original position
+            .times(Mat4.translation(2, 2.5, 0.25)) // Translate back to the original position
             .times(right_arm_pivot_translation) // Move the pivot point
             .times(Mat4.rotation(right_arm_rotation_angle, 1, 0, 0)) // Rotate around the pivot
             .times(Mat4.scale(0.5, 1.5, 0.5));
@@ -173,27 +216,27 @@ export class FishermanScene extends Scene {
             this.materials.limb
         );
 
-        // Draw left leg
-        let left_leg_transform = model_transform
+        // Draw left foot
+        let left_foot_transform = model_transform
             .times(Mat4.translation(-0.75, -3, 0))
             .times(Mat4.rotation(Math.PI / 16, 1, 0, 0))
-            .times(Mat4.scale(0.5, 1.5, 0.5));
-        this.shapes.leftLeg.draw(
+            .times(Mat4.scale(0.5, 1, 0.5));
+        this.shapes.leftFoot.draw(
             context,
             program_state,
-            left_leg_transform,
+          left_foot_transform,
             this.materials.limb
         );
 
-        // Draw right leg
-        let right_leg_transform = model_transform
+        // Draw right foot
+        let right_foot_transform = model_transform
             .times(Mat4.translation(0.75, -3, 0))
             .times(Mat4.rotation(Math.PI / 16, 1, 0, 0))
-            .times(Mat4.scale(0.5, 1.5, 0.5));
-        this.shapes.rightLeg.draw(
+            .times(Mat4.scale(0.5, 1, 0.5));
+        this.shapes.rightFoot.draw(
             context,
             program_state,
-            right_leg_transform,
+          right_foot_transform,
             this.materials.limb
         );
     }
