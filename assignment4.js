@@ -39,6 +39,12 @@ export class Assignment4 extends Scene {
       ]),
       fish: new Shape_From_File("assets/fish.obj"),
       tree: new Shape_From_File("assets/palm.obj"),
+
+      //fishing rod
+      handle: new Subdivision_Sphere(4),
+      shaft: new Subdivision_Sphere(4),
+      lure: new Subdivision_Sphere(4),
+      string: new defs.Cylindrical_Tube(3, 30, [[0, 1], [0, 1]]),
     };
 
     const textured = new Textured_Phong(1);
@@ -90,6 +96,7 @@ export class Assignment4 extends Scene {
         diffusivity: 0.6,
         color: hex_color("#FF0000"),
       }),
+      
       tree: new Material(textured, {
         ambient: 0.7,
         diffusivity: 0.6,
@@ -100,6 +107,23 @@ export class Assignment4 extends Scene {
         ambient: 1.0,
 
         texture: new Texture("assets/ocean.png", "LINEAR_MIPMAP_LINEAR"),
+      }),
+
+      //fishing rod
+      rod: new Material(new defs.Phong_Shader(), {
+        ambient: 0.7,
+        diffusivity: 0.6,
+        color: hex_color("#8B4513"), // Brown color
+      }),
+      lure: new Material(new defs.Phong_Shader(), {
+        ambient: 0.7,
+        diffusivity: 0.6,
+        color: hex_color("#FF0000"), // Red color for the lure
+      }),
+      string: new Material(new defs.Phong_Shader(), {
+        ambient: 0.7,
+        diffusivity: 0.6,
+        color: hex_color("#000000"), // Black color for the string
       }),
     };
 
@@ -119,6 +143,10 @@ export class Assignment4 extends Scene {
       .times(Mat4.scale(300, 300, 1));
 
     this.isAnimation = true;
+
+    //fishing rod transformations
+
+    //this.string_transform = Mat4.identity().times(Mat4.scale(0.05, 0.05, 4)); // Initial transformation for the string
   }
 
   make_control_panel() {
@@ -281,6 +309,30 @@ export class Assignment4 extends Scene {
       tree_transform,
       this.materials.tree
     );
+    
+    // draw fishing rod
+    let handle_transform = Mat4.identity().times(Mat4.translation(0, 0, 8)).times(Mat4.scale(0.5, 0.5, 1.5));
+    let shaft_transform = Mat4.identity().times(Mat4.translation(0, 0, 12)).times(Mat4.scale(0.2, 0.2, 4));
+    let lure_transform = Mat4.identity().times(Mat4.translation(0, 0, 10)).times(Mat4.scale(0.2, 0.2, 0.2));
+
+    this.shapes.handle.draw(context, program_state, handle_transform, this.materials.rod);
+    this.shapes.shaft.draw(context, program_state, shaft_transform, this.materials.rod);
+    lure_transform = lure_transform.times(Mat4.rotation(t * 10, 0, 0, 1)).times(Mat4.translation(0, 4, 0));
+    this.shapes.lure.draw(context, program_state, lure_transform, this.materials.lure);
+    // const shaft_tip = this.shaft_transform.times(vec4(1, 1, 2, 1)); // Assuming the tip is 2 units along the z-axis from the center of the shaft
+    // const lure_tip = this.lure_transform.times(vec4(0, 0, 0.2, 1)); // Assuming the lure tip is 0.2 units along the z-axis from the center of the lure
+
+    // // Calculate the direction vector from the shaft to the lure
+    // const direction = vec3(lure_tip[0] - shaft_tip[0], lure_tip[1] - shaft_tip[1], lure_tip[2] - shaft_tip[2]);
+
+    // // Set up the transformation matrix for the string
+    // this.string_transform = Mat4.identity()
+    //   .times(Mat4.translation(...shaft_tip.to3()))
+    //   .times(Mat4.look_at(vec3(shaft_tip[0], shaft_tip[1], shaft_tip[2]), direction, vec3(0, 0, 1)))
+    //   .times(Mat4.scale(0.05, 0.05, 10));
+
+    // // Draw the string
+    // this.shapes.string.draw(context, program_state, this.string_transform, this.materials.string);
   }
 }
 
