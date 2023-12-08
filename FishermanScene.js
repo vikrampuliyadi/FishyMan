@@ -113,11 +113,11 @@ export class FishermanScene extends Scene {
             1 * Math.sin(program_state.animation_time / 1000); // Adjusted rotation range
         let right_arm_pivot_translation = Mat4.translation(
             -0.5, // X-coordinate to move the pivot point to the left end
-            -0.5, // Y-coordinate (no vertical movement)
-            0 // Z-coordinate (no depth movement)
+            -translation_distance / 10, // Y-coordinate (no vertical movement)
+            translation_distance // Z-coordinate (no depth movement)
         );
         let right_arm_transform = model_transform
-            .times(Mat4.translation(2, 3.25, 0.25)) // Translate back to the original position
+            .times(Mat4.translation(2, 2.5, 0.25)) // Translate back to the original position
             .times(right_arm_pivot_translation) // Move the pivot point
             .times(Mat4.rotation(right_arm_rotation_angle, 1, 0, 0)) // Rotate around the pivot
             .times(Mat4.scale(0.5, 1.5, 0.5));
