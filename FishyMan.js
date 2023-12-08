@@ -32,6 +32,15 @@ function getRandomColor() {
   return color(Math.random(), Math.random(), Math.random(), 1.0);
 }
 
+function angleBetweenVectors(v, w) {
+  const dotProduct = v.dot(w);
+  const magnitude1 = v.norm();
+  const magnitude2 = w.norm();
+  const cosineTheta = dotProduct / (magnitude1 * magnitude2);
+  const angleInRadians = Math.acos(cosineTheta);
+  return angleInRadians;
+}
+
 export class FishyMan extends Scene {
   constructor() {
     super();
@@ -132,13 +141,13 @@ export class FishyMan extends Scene {
     this.deltas = []; // [x, y, next_t]
     // spawn fish
     for (let i = 0; i <= 100; i++) {
-      let randomX = getRandomNumber(-100, 100);
-      while (randomX <= 10 && randomX >= -10) {
-        randomX = getRandomNumber(-100, 100);
+      let randomX = getRandomNumber(-70, 70);
+      while (randomX <= 5 && randomX >= -5) {
+        randomX = getRandomNumber(-70, 70);
       }
-      let randomY = getRandomNumber(-100, 100);
-      while (randomY <= 10 && randomY >= -10) {
-        randomY = getRandomNumber(-100, 100);
+      let randomY = getRandomNumber(-70, 70);
+      while (randomY <= 5 && randomY >= -5) {
+        randomY = getRandomNumber(-70, 70);
       }
 
       this.deltas.push([0,0,0]);
@@ -292,13 +301,16 @@ export class FishyMan extends Scene {
         this.deltas[i][1] = getRandomNumber(-1, 1);
         this.deltas[i][2] = t + getRandomNumber(1,3);
       }
+      let old_x = this.fish_positions[i][0];
+      let old_y = this.fish_positions[i][1];
       let new_x = this.fish_positions[i][0] + this.deltas[i][0] * dt * 4;
       let new_y = this.fish_positions[i][1] + this.deltas[i][1] * dt * 4;
       this.fish_positions[i][0] = new_x;
       this.fish_positions[i][1] = new_y;
       // Update the translation part of the fish transformation
       this.fish_transforms[i] = Mat4.identity()
-        .times(Mat4.translation(new_x, new_y, 2.7));
+        .times(Mat4.translation(new_x, new_y, 2.7))
+        .times(Mat4.rotation(angleBetweenVectors(vec3(1, 0, 0), vec3(this.deltas[i][0], this.deltas[i][1], 0)), 0, 0, 1));
 
       this.shapes.fish.draw(
         context,
