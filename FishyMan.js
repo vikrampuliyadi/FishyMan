@@ -25,7 +25,7 @@ const {
   Textured_Phong_Shader,
 } = defs;
 
-export class Assignment4 extends Scene {
+export class FishyMan extends Scene {
   constructor() {
     super();
 
