@@ -165,41 +165,42 @@ export class FishermanScene extends Scene {
         );
     }
 
-    // Set a fixed path for the lure
-    const lure_path = vec3(0, 0, -0.05); // Adjust the path as needed
+//     // Set a fixed path for the lure
+//     const lure_path = vec3(0, 0, -0.05); // Adjust the path as needed
 
-    let handle_transform = this.right_arm_transform
-      .times(Mat4.translation(0, 1.2, 0))
-      .times(Mat4.scale(1, 0.2, 1.5));
-    let shaft_transform = handle_transform
-      .times(Mat4.translation(0, 0, -4))
-      .times(Mat4.scale(0.4, 0.4, 5));
+//     let handle_transform = this.right_arm_transform
+//       .times(Mat4.translation(0, 1.2, 0))
+//       .times(Mat4.scale(1, 0.2, 1.5));
 
-    // Set the position of the lure based on the fixed path
-    let lure_transform = shaft_transform
-      .times(Mat4.translation(0, -7, 0))
-      .times(Mat4.translation(lure_path.times(t))) // Multiply by t for slower movement
-      .times(Mat4.scale(1, 1, 0.05));
+//     let shaft_transform = handle_transform
+//       .times(Mat4.translation(0, 0, -4))
+//       .times(Mat4.scale(0.4, 0.4, 5));
 
-    this.shapes.handle.draw(
-      context,
-      program_state,
-      handle_transform,
-      this.materials.rod
-    );
-    this.shapes.shaft.draw(
-      context,
-      program_state,
-      shaft_transform,
-      this.materials.rod
-    );
-    this.shapes.lure.draw(
-      context,
-      program_state,
-      lure_transform,
-      this.materials.lure
-    );
-  }
+//     // Set the position of the lure based on the fixed path
+//     let lure_transform = shaft_transform
+//       .times(Mat4.translation(0, -7, 0))
+//       .times(Mat4.translation(lure_path.times(t))) // Multiply by t for slower movement
+//       .times(Mat4.scale(1, 1, 0.05));
+
+//     this.shapes.handle.draw(
+//       context,
+//       program_state,
+//       handle_transform,
+//       this.materials.rod
+//     );
+//     this.shapes.shaft.draw(
+//       context,
+//       program_state,
+//       shaft_transform,
+//       this.materials.rod
+//     );
+//     this.shapes.lure.draw(
+//       context,
+//       program_state,
+//       lure_transform,
+//       this.materials.lure
+//     );
+//   }
 
   drawStickFigure(context, program_state, model_transform) {
     // Draw head
