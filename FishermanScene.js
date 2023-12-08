@@ -17,7 +17,7 @@ const {
 const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
   defs;
 
-  export class FishermanScene extends Scene {
+export class FishermanScene extends Scene {
   constructor() {
     super();
 
@@ -156,7 +156,6 @@ const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
       this.drawLure(context, program_state);
       this.updateLurePosition(program_state.animation_delta_time / 1000);
     }
-
   }
 
   drawFishingRod(context, program_state, model_transform) {
@@ -184,8 +183,10 @@ const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
       this.materials.rod
     );
     if (!this.launching) {
-      let lure_transform = shaft_transform.times(Mat4.translation(2, -2, -1)).times(Mat4.scale(1, 1, 0.05));
-      this.lure_position = vec3(1.08,-3.01, 8.856);
+      let lure_transform = shaft_transform
+        .times(Mat4.translation(2, -2, -1))
+        .times(Mat4.scale(1, 1, 0.05));
+      this.lure_position = vec3(1.08, -3.01, 8.856);
       this.shapes.lure.draw(
         context,
         program_state,
@@ -195,13 +196,21 @@ const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
     }
   }
 
-  launchLure(velocity, launch_angle) {
+  launchLure(desired_distance, launch_angle) {
     this.launching = true;
     this.caught = false;
-    this.lure_position = vec3(1, -11, 8.8);
+    this.lure_position = vec3(1, -11, 8.8); // Initial position of the lure
+
+    // Calculate the launch angle based on the desired distance and a fixed angle (adjust as needed)
+
+    // Calculate the launch velocity to achieve the desired horizontal distance
+    if (desired_distance < 3) {
+      desired_distance = 3;
+    }
+    const horizontal_velocity = desired_distance / Math.cos(launch_angle);
     // Calculate horizontal and vertical components of the initial velocity
-    const horizontal_velocity = velocity * Math.cos(launch_angle);
-    const vertical_velocity = velocity * Math.sin(launch_angle);
+    const vertical_velocity = horizontal_velocity * Math.tan(launch_angle);
+
     this.lure_velocity = vec3(0, horizontal_velocity * -1, vertical_velocity); // Set the initial velocity
   }
 
@@ -209,7 +218,9 @@ const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
   updateLurePosition(delta_time) {
     if (this.launching) {
       this.lure_position[1] += this.lure_velocity[1] * delta_time;
-      this.lure_position[2] += this.lure_velocity[2] * delta_time + 0.5 * this.gravity * delta_time * delta_time; //kinematics equation
+      this.lure_position[2] +=
+        this.lure_velocity[2] * delta_time +
+        0.5 * this.gravity * delta_time * delta_time; //kinematics equation
 
       this.lure_velocity[2] += this.gravity * delta_time;
 
@@ -224,7 +235,14 @@ const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
 
   drawLure(context, program_state) {
     // Draw the lure at the updated position
-    let lure_transform = Mat4.identity().times(Mat4.translation(this.lure_position[0], this.lure_position[1], this.lure_position[2]))
+    let lure_transform = Mat4.identity()
+      .times(
+        Mat4.translation(
+          this.lure_position[0],
+          this.lure_position[1],
+          this.lure_position[2]
+        )
+      )
       .times(Mat4.scale(0.2, 0.2, 0.2));
     this.shapes.lure.draw(
       context,
@@ -233,7 +251,6 @@ const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
       this.materials.lure
     );
   }
-
 
   drawStickFigure(context, program_state, model_transform) {
     // Draw head
@@ -295,30 +312,29 @@ const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
     let translation_distance =
       1.5 * Math.sin(program_state.animation_time / 1000);
 
-
     if (this.launching) {
       this.right_arm_transform = model_transform
         .times(Mat4.translation(1.6, 1, 0.7))
-        .times(Mat4.rotation(3*Math.PI / 4, 1, 0, 0))
+        .times(Mat4.rotation((3 * Math.PI) / 4, 1, 0, 0))
         .times(Mat4.scale(0.5, 1.5, 0.5));
     } else if (this.caught) {
-        // Define animation parameters
+      // Define animation parameters
       const t = program_state.animation_time / 1000;
-      const initial_angle = 3 * Math.PI / 4; // Initial angle of rotation
+      const initial_angle = (3 * Math.PI) / 4; // Initial angle of rotation
       const final_angle = 0; // Final angle of rotation
       const animation_duration = 5; // Animation duration in seconds
 
       // Calculate the interpolated angle based on the animation progress
-      const interpolated_angle = initial_angle + (final_angle - initial_angle) * Math.min(t / animation_duration, 1);
+      const interpolated_angle =
+        initial_angle +
+        (final_angle - initial_angle) * Math.min(t / animation_duration, 1);
 
       // Update the right arm transform with the interpolated rotation
       this.right_arm_transform = model_transform
-          .times(Mat4.translation(1.4, 3.2, 0.1))
-          .times(Mat4.rotation(interpolated_angle, 1, 0, 0))
-          .times(Mat4.scale(0.5, 1.5, 0.5));
+        .times(Mat4.translation(1.4, 3.2, 0.1))
+        .times(Mat4.rotation(interpolated_angle, 1, 0, 0))
+        .times(Mat4.scale(0.5, 1.5, 0.5));
     } else {
-      // Draw right arm with both rotation and translation
-      // Draw right arm with both rotation and translation
       // Draw right arm with both rotation and translation
       let right_arm_rotation_angle =
         1 * Math.sin(program_state.animation_time / 1000); // Adjusted rotation range

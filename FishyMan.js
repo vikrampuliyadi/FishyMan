@@ -110,30 +110,30 @@ export class FishyMan extends Scene {
         texture: new Texture("assets/ocean.png", "LINEAR_MIPMAP_LINEAR"),
       }),
     };
+    // I dont think we need this w/ current implementation but ima leave this here jst in case
+    // let x,
+    //   y,
+    //   z,
+    //   s,
+    //   t = 0; // Add "let" before x, y, z, s
+    // this.fish = [];
+    // // console.log("JELLO");
 
-    let x,
-      y,
-      z,
-      s,
-      t = 0; // Add "let" before x, y, z, s
-    this.fish = [];
-    // console.log("JELLO");
+    // const gridCenter = vec3(-15, -15, 3);
+    // const gridWidth = 20;
+    // const gridHeight = 20;
 
-    const gridCenter = vec3(-15, -15, 2);
-    const gridWidth = 15;
-    const gridHeight = 15;
+    // for (let i = 0; i < gridWidth; i++) {
+    //   for (let j = 0; j < gridHeight; j++) {
+    //     x = gridCenter[0] + i * 3; // Adjust the scale as needed
+    //     y = gridCenter[1] + j * 3; // Adjust the scale as needed
+    //     z = gridCenter[2];
 
-    for (let i = 0; i < gridWidth; i++) {
-      for (let j = 0; j < gridHeight; j++) {
-        x = gridCenter[0] + i * 2; // Adjust the scale as needed
-        y = gridCenter[1] + j * 2; // Adjust the scale as needed
-        z = gridCenter[2];
-
-        // Populate the fish array with vector positions
-        console.log(x, y, z);
-        this.fish.push(vec3(x, y, z));
-      }
-    }
+    //     // Populate the fish array with vector positions
+    //     console.log(x, y, z);
+    //     this.fish.push(vec3(x, y, z));
+    //   }
+    // }
 
     this.light_view_target = vec4(0, 0, 0, 1);
 
@@ -155,7 +155,7 @@ export class FishyMan extends Scene {
     this.hasPositioned = false;
 
     console.log(this.initial_camera_location);
-
+    this.slider_value = 6;
     this.caught_fish_nums = [];
     this.isFishing = true;
     this.fish_positions = [];
@@ -177,9 +177,17 @@ export class FishyMan extends Scene {
 
       this.color_array.push(getRandomColor());
       this.fish_positions.push(vec3(randomX, randomY, 2.7));
-      this.fish_transforms.push(Mat4.identity()
-        .times(Mat4.translation(randomX, randomY, 2.7))
-        .times(Mat4.scale(Math.random() + 0.8, Math.random() + 0.8, Math.random() + 0.8)));
+      this.fish_transforms.push(
+        Mat4.identity()
+          .times(Mat4.translation(randomX, randomY, 2.7))
+          .times(
+            Mat4.scale(
+              Math.random() + 0.8,
+              Math.random() + 0.8,
+              Math.random() + 0.8
+            )
+          )
+      );
     }
   }
 
@@ -189,9 +197,9 @@ export class FishyMan extends Scene {
       this.isAnimation = !this.isAnimation;
       this.hasPositioned = false;
     });
-
     this.key_triggered_button("Go Fish!", ["t"], () => {
-      this.fisherman.launchLure(8, Math.PI / 4);
+      // this.fisherman.launchLure(8, Math.PI / 4);
+      this.fisherman.launchLure(this.slider_value, Math.PI / 4);
     });
 
     this.key_triggered_button("Return to Swinging", ["e"], () => {
@@ -205,6 +213,16 @@ export class FishyMan extends Scene {
     this.key_triggered_button("Debug", ["Control", "2"], () => {
       console.log(this.initial_camera_location);
       //this.isAnimation = false;
+    });
+    this.key_triggered_button("Set Desired Distance", ["Control", "3"], () => {
+      const desiredDistance = this.slider_value; // Use the value from the slider
+      this.fisherman.launchLure(desiredDistance, Math.PI / 4);
+    });
+    this.key_triggered_button("Increase Desired Distance", ["+"], () => {
+      this.slider_value = this.slider_value + 1; // Use the value from the slider
+    });
+    this.key_triggered_button("Decrease Desired Distance", ["-"], () => {
+      this.slider_value = this.slider_value - 1; // Use the value from the slider
     });
   }
 
@@ -225,9 +243,7 @@ export class FishyMan extends Scene {
     );
 
     const light_position = vec4(-3, -18, -90, 0);
-    program_state.lights = [
-      new Light(light_position, color(1, 1, 1, 1), 1000),
-    ];
+    program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
 
     let t = program_state.animation_time / 1500,
       dt = program_state.animation_delta_time / 1500;
@@ -290,10 +306,11 @@ export class FishyMan extends Scene {
         // }
 
         // Draw water background
-        let background_transform = model_transform.times(Mat4.scale(200, 200, 200));
+        let background_transform = model_transform.times(
+          Mat4.scale(200, 200, 200)
+        );
 
-        let normalizedTime =
-          (t % animationDuration) / animationDuration;
+        let normalizedTime = (t % animationDuration) / animationDuration;
         // Use the normalized time to create an oscillating movement
         let angle = normalizedTime * 2 * Math.PI;
 
@@ -318,8 +335,7 @@ export class FishyMan extends Scene {
         const animationDuration = 30.0; // Adjust this duration as needed
 
         // Calculate the normalized time within the animation duration
-        let normalizedTime =
-          (t % animationDuration) / animationDuration;
+        let normalizedTime = (t % animationDuration) / animationDuration;
 
         // Use the normalized time to create a limited oscillating movement (45 degrees left to right)
         let maxAngle = Math.PI / 4; // 45 degrees
@@ -372,13 +388,15 @@ export class FishyMan extends Scene {
 
     if (this.caught_fish_nums.length > 0) {
       for (let i = 0; i < this.caught_fish_nums.length; i++) {
-        let caught_fish_transform = Mat4.identity().times(Mat4.translation(0, 0, i + 5));
+        let caught_fish_transform = Mat4.identity().times(
+          Mat4.translation(0, 0, i + 5)
+        );
         this.shapes.fish.draw(
           context,
           program_state,
           caught_fish_transform,
           this.materials.fish3.override({
-            color: this.color_array[i]
+            color: this.color_array[i],
           })
         );
       }
@@ -387,15 +405,16 @@ export class FishyMan extends Scene {
     let lure_position = this.fisherman.getLurePosition();
     for (let i = 0; i <= 100; i++) {
       if (i == this.caught_fish_num) {
-        let caught_fish_transform = Mat4.identity().times(Mat4.translation(lure_position[0], lure_position[1], 10));
+        let caught_fish_transform = Mat4.identity().times(
+          Mat4.translation(lure_position[0], lure_position[1], 10)
+        );
         this.shapes.fish.draw(
           context,
           program_state,
           caught_fish_transform,
           this.materials.fish3.override({
-            color: this.color_array[i]
+            color: this.color_array[i],
           })
-
         );
         this.caught_fish_num = -1;
         continue;
@@ -416,14 +435,24 @@ export class FishyMan extends Scene {
       // Update the translation part of the fish transformation
       this.fish_transforms[i] = Mat4.identity()
         .times(Mat4.translation(new_x, new_y, 2.7))
-        .times(Mat4.rotation(angleBetweenVectors(vec3(1, 0, 0), vec3(this.deltas[i][0], this.deltas[i][1], 0)), 0, 0, 1));
+        .times(
+          Mat4.rotation(
+            angleBetweenVectors(
+              vec3(1, 0, 0),
+              vec3(this.deltas[i][0], this.deltas[i][1], 0)
+            ),
+            0,
+            0,
+            1
+          )
+        );
 
       this.shapes.fish.draw(
         context,
         program_state,
         this.fish_transforms[i],
         this.materials.fish3.override({
-          color: this.color_array[i]
+          color: this.color_array[i],
         })
       );
     }
@@ -434,8 +463,12 @@ export class FishyMan extends Scene {
         if (this.caught_fish_nums.includes(i)) {
           continue;
         }
-        const distance = Math.sqrt((this.fish_positions[i][0] - lure_position[0]) ** 2 + (this.fish_positions[i][1] - lure_position[1]) ** 2 + (this.fish_positions[i][2] - lure_position[2]) ** 2);
-        if (distance <= 6) {
+        const distance = Math.sqrt(
+          (this.fish_positions[i][0] - lure_position[0]) ** 2 +
+            (this.fish_positions[i][1] - lure_position[1]) ** 2 +
+            (this.fish_positions[i][2] - lure_position[2]) ** 2
+        );
+        if (distance <= 5) {
           let curr_fish = this.fish_positions[i];
           curr_fish[0] = lure_position[0];
           curr_fish[1] = lure_position[1];
@@ -474,9 +507,7 @@ export class FishyMan extends Scene {
     );
 
     // Draw water background
-    let background_transform = model_transform.times(
-      Mat4.scale(200, 200, 200)
-    );
+    let background_transform = model_transform.times(Mat4.scale(200, 200, 200));
 
     this.shapes.sphere.draw(
       context,
@@ -511,7 +542,7 @@ export class FishyMan extends Scene {
       sand_transform,
       this.materials.sand
     );
-    let tree_transform = model_transform
+    let tree_transform1 = model_transform
       .times(Mat4.translation(5, 5, 10)) // Set the position of the tree
       .times(Mat4.scale(2, 2, 2)) // Set the scale of the tree
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0)); // Rotate around the y-axis
@@ -519,14 +550,46 @@ export class FishyMan extends Scene {
     this.shapes.tree.draw(
       context,
       program_state,
-      tree_transform,
+      tree_transform1,
+      this.materials.tree
+    );
+    let tree_transform2 = model_transform
+      .times(Mat4.translation(10, 2, 13)) // Set the position of the tree
+      .times(Mat4.scale(2, 2, 2)) // Set the scale of the tree
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0)); // Rotate around the y-axis
+
+    this.shapes.tree.draw(
+      context,
+      program_state,
+      tree_transform2,
+      this.materials.tree
+    );
+    let tree_transform3 = model_transform
+      .times(Mat4.translation(8, 7, 12)) // Set the position of the tree
+      .times(Mat4.scale(2, 2, 2)) // Set the scale of the tree
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0)); // Rotate around the y-axis
+
+    this.shapes.tree.draw(
+      context,
+      program_state,
+      tree_transform3,
+      this.materials.tree
+    );
+    let tree_transform4 = model_transform
+      .times(Mat4.translation(3, 10, 14)) // Set the position of the tree
+      .times(Mat4.scale(2, 2, 2)) // Set the scale of the tree
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0)); // Rotate around the y-axis
+
+    this.shapes.tree.draw(
+      context,
+      program_state,
+      tree_transform4,
       this.materials.tree
     );
 
     this.fisherman.display(context, program_state);
   }
 }
-
 
 class Texture_Scroll_X extends Textured_Phong {
   // TODO:  Modify the shader below (right now it's just the same fragment shader as Textured_Phong) for requirement #6.
