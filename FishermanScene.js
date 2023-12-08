@@ -15,38 +15,38 @@ const {
 } = tiny;
 
 const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
-    defs;
-// let isSwinging = true;
-export class FishermanScene extends Scene {
+  defs;
+
+  export class FishermanScene extends Scene {
   constructor() {
     super();
 
-        this.isSwinging = true;
-        this.swingingStartPosition = null;
-        this.lastTranslationDistanceX = 0;
-        this.lastTranslationDistanceY = 0;
-        this.lastTranslationDistanceZ = 0;
-        this.lastRotationAngle = 0;
+    this.isSwinging = true;
+    this.swingingStartPosition = null;
+    this.lastTranslationDistanceX = 0;
+    this.lastTranslationDistanceY = 0;
+    this.lastTranslationDistanceZ = 0;
+    this.lastRotationAngle = 0;
 
-        this.shapes = {
-            //fisherman
-            head: new Subdivision_Sphere(3),
-            torso: new Cube(),
-            leftArm: new Cube(),
-            rightArm: new Cube(),
-            legs: new Cube(),
-            leftFoot: new Cube(),
-            rightFoot: new Cube(),
+    this.shapes = {
+      //fisherman
+      head: new Subdivision_Sphere(3),
+      torso: new Cube(),
+      leftArm: new Cube(),
+      rightArm: new Cube(),
+      legs: new Cube(),
+      leftFoot: new Cube(),
+      rightFoot: new Cube(),
 
-            //fishing rod
-            handle: new Subdivision_Sphere(4),
-            shaft: new Subdivision_Sphere(4),
-            lure: new Subdivision_Sphere(4),
-            string: new defs.Cylindrical_Tube(3, 30, [
-                [0, 1],
-                [0, 1],
-            ]),
-        };
+      //fishing rod
+      handle: new Subdivision_Sphere(4),
+      shaft: new Subdivision_Sphere(4),
+      lure: new Subdivision_Sphere(4),
+      string: new defs.Cylindrical_Tube(3, 30, [
+        [0, 1],
+        [0, 1],
+      ]),
+    };
 
     const phong_shader = new Textured_Phong(1);
 
@@ -113,6 +113,30 @@ export class FishermanScene extends Scene {
     this.body_transform = Mat4.identity();
     this.left_arm_transform = Mat4.identity();
     this.right_arm_transform = Mat4.identity();
+
+    this.launching = false; // Flag to determine if the lure is launching
+    this.caught = false; //flag if fish has been caught
+
+    this.lure_position = vec3(0, -10, 10); // Initial position of the lure
+    this.lure_velocity = vec3(0, 0, 0); // Initial velocity of the lure
+    this.gravity = -9.8; // Gravity constant (adjust as needed)
+  }
+
+  getLurePosition() {
+    return this.lure_position;
+  }
+  setCaught(caught) {
+    this.launching = false;
+    this.isSwinging = false;
+    this.caught = caught;
+  }
+  getCaught() {
+    return this.caught;
+  }
+  returnToSwinging() {
+    this.caught = false;
+    this.launching = false;
+    this.isSwinging = true;
   }
 
   display(context, program_state) {
@@ -127,80 +151,89 @@ export class FishermanScene extends Scene {
 
     this.drawStickFigure(context, program_state, model_transform);
     this.drawFishingRod(context, program_state, model_transform);
+    // Check if the lure is launching and update its position
+    if (this.launching) {
+      this.drawLure(context, program_state);
+      this.updateLurePosition(program_state.animation_delta_time / 1000);
+    }
+
   }
 
   drawFishingRod(context, program_state, model_transform) {
-      // draw fishing rod
-      const t = program_state.animation_time / 1000;
+    // draw fishing rod
+    const t = program_state.animation_time / 1000;
 
-        //let handle_transform = Mat4.identity().times(Mat4.translation(0, 0, 8)).times(Mat4.scale(0.5, 0.5, 1.5));
-        let handle_transform = this.right_arm_transform
-            .times(Mat4.translation(0, 1.2, 0))
-            .times(Mat4.scale(1, 0.2, 1.5));
-        let shaft_transform = handle_transform
-            .times(Mat4.translation(0, 0, -4))
-            .times(Mat4.scale(0.4, 0.4, 5));
-        let lure_transform = shaft_transform
-            .times(Mat4.translation(2, -2, -1))
-            .times(Mat4.scale(1, 1, 0.05));
+    //let handle_transform = Mat4.identity().times(Mat4.translation(0, 0, 8)).times(Mat4.scale(0.5, 0.5, 1.5));
+    let handle_transform = this.right_arm_transform
+      .times(Mat4.translation(0, 1.2, 0))
+      .times(Mat4.scale(1, 0.2, 1.5));
+    let shaft_transform = handle_transform
+      .times(Mat4.translation(0, 0, -4))
+      .times(Mat4.scale(0.4, 0.4, 5));
 
-        this.shapes.handle.draw(
-            context,
-            program_state,
-            handle_transform,
-            this.materials.rod
-        );
-        this.shapes.shaft.draw(
-            context,
-            program_state,
-            shaft_transform,
-            this.materials.rod
-        );
-        //lure_transform = lure_transform.times(Mat4.rotation(t * 10, 0, 0, 1)).times(Mat4.translation(0, 4, 0));
-        this.shapes.lure.draw(
-            context,
-            program_state,
-            lure_transform,
-            this.materials.lure
-        );
+    this.shapes.handle.draw(
+      context,
+      program_state,
+      handle_transform,
+      this.materials.rod
+    );
+    this.shapes.shaft.draw(
+      context,
+      program_state,
+      shaft_transform,
+      this.materials.rod
+    );
+    if (!this.launching) {
+      let lure_transform = shaft_transform.times(Mat4.translation(2, -2, -1)).times(Mat4.scale(1, 1, 0.05));
+      this.lure_position = vec3(1.08,-3.01, 8.856);
+      this.shapes.lure.draw(
+        context,
+        program_state,
+        lure_transform,
+        this.materials.lure
+      );
     }
+  }
 
-//     // Set a fixed path for the lure
-//     const lure_path = vec3(0, 0, -0.05); // Adjust the path as needed
+  launchLure(velocity, launch_angle) {
+    this.launching = true;
+    this.caught = false;
+    this.lure_position = vec3(1, -11, 8.8);
+    // Calculate horizontal and vertical components of the initial velocity
+    const horizontal_velocity = velocity * Math.cos(launch_angle);
+    const vertical_velocity = velocity * Math.sin(launch_angle);
+    this.lure_velocity = vec3(0, horizontal_velocity * -1, vertical_velocity); // Set the initial velocity
+  }
 
-//     let handle_transform = this.right_arm_transform
-//       .times(Mat4.translation(0, 1.2, 0))
-//       .times(Mat4.scale(1, 0.2, 1.5));
+  // Function to update the lure's position based on physics
+  updateLurePosition(delta_time) {
+    if (this.launching) {
+      this.lure_position[1] += this.lure_velocity[1] * delta_time;
+      this.lure_position[2] += this.lure_velocity[2] * delta_time + 0.5 * this.gravity * delta_time * delta_time; //kinematics equation
 
-//     let shaft_transform = handle_transform
-//       .times(Mat4.translation(0, 0, -4))
-//       .times(Mat4.scale(0.4, 0.4, 5));
+      this.lure_velocity[2] += this.gravity * delta_time;
 
-//     // Set the position of the lure based on the fixed path
-//     let lure_transform = shaft_transform
-//       .times(Mat4.translation(0, -7, 0))
-//       .times(Mat4.translation(lure_path.times(t))) // Multiply by t for slower movement
-//       .times(Mat4.scale(1, 1, 0.05));
+      // If the lure has hit the ground, stop launching
+      if (this.lure_position[2] <= 3.3) {
+        //this.launching = false;
+        //this.lure_position[2] = 4; // Set the position to ground level
+        this.lure_velocity = vec3(0, 0, 0); // Stop the lure
+      }
+    }
+  }
 
-//     this.shapes.handle.draw(
-//       context,
-//       program_state,
-//       handle_transform,
-//       this.materials.rod
-//     );
-//     this.shapes.shaft.draw(
-//       context,
-//       program_state,
-//       shaft_transform,
-//       this.materials.rod
-//     );
-//     this.shapes.lure.draw(
-//       context,
-//       program_state,
-//       lure_transform,
-//       this.materials.lure
-//     );
-//   }
+  drawLure(context, program_state) {
+    // Draw the lure at the updated position
+    let lure_transform = Mat4.identity().times(Mat4.translation(this.lure_position[0], this.lure_position[1], this.lure_position[2]))
+      .times(Mat4.scale(0.2, 0.2, 0.2));
+    this.shapes.lure.draw(
+      context,
+      program_state,
+      lure_transform,
+      this.materials.lure
+    );
+  }
+
 
   drawStickFigure(context, program_state, model_transform) {
     // Draw head
@@ -262,21 +295,44 @@ export class FishermanScene extends Scene {
     let translation_distance =
       1.5 * Math.sin(program_state.animation_time / 1000);
 
-    // Draw right arm with both rotation and translation
-    // Draw right arm with both rotation and translation
-    // Draw right arm with both rotation and translation
-    let right_arm_rotation_angle =
-      1 * Math.sin(program_state.animation_time / 1000); // Adjusted rotation range
-    let right_arm_pivot_translation = Mat4.translation(
-      -0.5, // X-coordinate to move the pivot point to the left end
-      -translation_distance / 10, // Y-coordinate (no vertical movement)
-      translation_distance // Z-coordinate (no depth movement)
-    );
-    this.right_arm_transform = model_transform
-      .times(Mat4.translation(2, 3, 0)) // Translate back to the original position
-      .times(right_arm_pivot_translation) // Move the pivot point
-      .times(Mat4.rotation(right_arm_rotation_angle, 1, 0, 0)) // Rotate around the pivot
-      .times(Mat4.scale(0.5, 1.5, 0.5));
+
+    if (this.launching) {
+      this.right_arm_transform = model_transform
+        .times(Mat4.translation(1.6, 1, 0.7))
+        .times(Mat4.rotation(3*Math.PI / 4, 1, 0, 0))
+        .times(Mat4.scale(0.5, 1.5, 0.5));
+    } else if (this.caught) {
+        // Define animation parameters
+      const t = program_state.animation_time / 1000;
+      const initial_angle = 3 * Math.PI / 4; // Initial angle of rotation
+      const final_angle = 0; // Final angle of rotation
+      const animation_duration = 5; // Animation duration in seconds
+
+      // Calculate the interpolated angle based on the animation progress
+      const interpolated_angle = initial_angle + (final_angle - initial_angle) * Math.min(t / animation_duration, 1);
+
+      // Update the right arm transform with the interpolated rotation
+      this.right_arm_transform = model_transform
+          .times(Mat4.translation(1.4, 3.2, 0.1))
+          .times(Mat4.rotation(interpolated_angle, 1, 0, 0))
+          .times(Mat4.scale(0.5, 1.5, 0.5));
+    } else {
+      // Draw right arm with both rotation and translation
+      // Draw right arm with both rotation and translation
+      // Draw right arm with both rotation and translation
+      let right_arm_rotation_angle =
+        1 * Math.sin(program_state.animation_time / 1000); // Adjusted rotation range
+      let right_arm_pivot_translation = Mat4.translation(
+        -0.5, // X-coordinate to move the pivot point to the left end
+        -translation_distance / 10, // Y-coordinate (no vertical movement)
+        translation_distance // Z-coordinate (no depth movement)
+      );
+      this.right_arm_transform = model_transform
+        .times(Mat4.translation(2, 3, 0)) // Translate back to the original position
+        .times(right_arm_pivot_translation) // Move the pivot point
+        .times(Mat4.rotation(right_arm_rotation_angle, 1, 0, 0)) // Rotate around the pivot
+        .times(Mat4.scale(0.5, 1.5, 0.5));
+    }
     this.shapes.rightArm.draw(
       context,
       program_state,
