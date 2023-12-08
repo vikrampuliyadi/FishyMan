@@ -16,8 +16,8 @@ const {
 
 const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
   defs;
-// let isSwinging = true;
-export class FishermanScene extends Scene {
+
+  export class FishermanScene extends Scene {
   constructor() {
     super();
 
@@ -115,9 +115,28 @@ export class FishermanScene extends Scene {
     this.right_arm_transform = Mat4.identity();
 
     this.launching = false; // Flag to determine if the lure is launching
+    this.caught = false; //flag if fish has been caught
+
     this.lure_position = vec3(0, -10, 10); // Initial position of the lure
     this.lure_velocity = vec3(0, 0, 0); // Initial velocity of the lure
     this.gravity = -9.8; // Gravity constant (adjust as needed)
+  }
+
+  getLurePosition() {
+    return this.lure_position;
+  }
+  setCaught(caught) {
+    this.launching = false;
+    this.isSwinging = false;
+    this.caught = caught;
+  }
+  getCaught() {
+    return this.caught;
+  }
+  returnToSwinging() {
+    this.caught = false;
+    this.launching = false;
+    this.isSwinging = true;
   }
 
   display(context, program_state) {
@@ -166,6 +185,7 @@ export class FishermanScene extends Scene {
     );
     if (!this.launching) {
       let lure_transform = shaft_transform.times(Mat4.translation(2, -2, -1)).times(Mat4.scale(1, 1, 0.05));
+      this.lure_position = vec3(1.08,-3.01, 8.856);
       this.shapes.lure.draw(
         context,
         program_state,
@@ -177,6 +197,7 @@ export class FishermanScene extends Scene {
 
   launchLure(velocity, launch_angle) {
     this.launching = true;
+    this.caught = false;
     this.lure_position = vec3(1, -11, 8.8);
     // Calculate horizontal and vertical components of the initial velocity
     const horizontal_velocity = velocity * Math.cos(launch_angle);
@@ -187,18 +208,14 @@ export class FishermanScene extends Scene {
   // Function to update the lure's position based on physics
   updateLurePosition(delta_time) {
     if (this.launching) {
-      // Update horizontal position
       this.lure_position[1] += this.lure_velocity[1] * delta_time;
+      this.lure_position[2] += this.lure_velocity[2] * delta_time + 0.5 * this.gravity * delta_time * delta_time; //kinematics equation
 
-      // Update vertical position using the kinematic equation
-      this.lure_position[2] += this.lure_velocity[2] * delta_time + 0.5 * this.gravity * delta_time * delta_time;
-
-      // Update vertical velocity using the equation
       this.lure_velocity[2] += this.gravity * delta_time;
 
       // If the lure has hit the ground, stop launching
       if (this.lure_position[2] <= 3.3) {
-        this.launching = false;
+        //this.launching = false;
         //this.lure_position[2] = 4; // Set the position to ground level
         this.lure_velocity = vec3(0, 0, 0); // Stop the lure
       }
@@ -217,44 +234,6 @@ export class FishermanScene extends Scene {
     );
   }
 
-  // toggleSwingingMotion(context, program_state) {
-  //   // Set a fixed path for the lure
-  //   const lure_path = vec3(0, 0, -0.05); // Adjust the path as needed
-  //   const t = program_state.animation_time / 1000;
-
-  //   let handle_transform = this.right_arm_transform
-  //     .times(Mat4.translation(0, 1.2, 0))
-  //     .times(Mat4.scale(1, 0.2, 1.5));
-
-  //   let shaft_transform = handle_transform
-  //     .times(Mat4.translation(0, 0, -4))
-  //     .times(Mat4.scale(0.4, 0.4, 5));
-
-  //   // Set the position of the lure based on the fixed path
-  //   let lure_transform = shaft_transform
-  //     .times(Mat4.translation(0, -7, 0))
-  //     .times(Mat4.translation(lure_path.times(t))) // Multiply by t for slower movement
-  //     .times(Mat4.scale(1, 1, 0.05));
-
-  //   this.shapes.handle.draw(
-  //     context,
-  //     program_state,
-  //     handle_transform,
-  //     this.materials.rod
-  //   );
-  //   this.shapes.shaft.draw(
-  //     context,
-  //     program_state,
-  //     shaft_transform,
-  //     this.materials.rod
-  //   );
-  //   this.shapes.lure.draw(
-  //     context,
-  //     program_state,
-  //     lure_transform,
-  //     this.materials.lure
-  //   );
-  // }
 
   drawStickFigure(context, program_state, model_transform) {
     // Draw head
@@ -322,6 +301,21 @@ export class FishermanScene extends Scene {
         .times(Mat4.translation(1.6, 1, 0.7))
         .times(Mat4.rotation(3*Math.PI / 4, 1, 0, 0))
         .times(Mat4.scale(0.5, 1.5, 0.5));
+    } else if (this.caught) {
+        // Define animation parameters
+      const t = program_state.animation_time / 1000;
+      const initial_angle = 3 * Math.PI / 4; // Initial angle of rotation
+      const final_angle = 0; // Final angle of rotation
+      const animation_duration = 5; // Animation duration in seconds
+
+      // Calculate the interpolated angle based on the animation progress
+      const interpolated_angle = initial_angle + (final_angle - initial_angle) * Math.min(t / animation_duration, 1);
+
+      // Update the right arm transform with the interpolated rotation
+      this.right_arm_transform = model_transform
+          .times(Mat4.translation(1.4, 3.2, 0.1))
+          .times(Mat4.rotation(interpolated_angle, 1, 0, 0))
+          .times(Mat4.scale(0.5, 1.5, 0.5));
     } else {
       // Draw right arm with both rotation and translation
       // Draw right arm with both rotation and translation
