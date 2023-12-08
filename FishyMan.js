@@ -25,6 +25,13 @@ const {
   Textured_Phong_Shader,
 } = defs;
 
+function getRandomNumber(min, max) {
+  return Math.random() * (max - min) + min;
+}
+function getRandomColor() {
+  return color(Math.random(), Math.random(), Math.random(), 1.0);
+}
+
 export class FishyMan extends Scene {
   constructor() {
     super();
@@ -46,46 +53,35 @@ export class FishyMan extends Scene {
 
     const textured = new Textured_Phong(1);
 
-        this.materials = {
-            water: new Material(textured, {
-                smoothness: 64,
-                ambient: 0.8,
-                texture: new Texture("assets/ocean.png"),
-            }),
-            sand: new Material(textured, {
-                ambient: 0.6,
-                diffusivity: 0.9,
-                color: hex_color("#ffaf40"),
-                smoothness: 64,
-                texture: new Texture("assets/sand3.png"),
-                light_depth_texture: null,
-            }),
-            sky: new Material(textured, {
-                ambient: 0.9,
-                diffusivity: 1,
-                color: hex_color("#87CEEB"),
-                texture: new Texture("assets/sky_three.jpeg"),
-            }),
-            wood: new Material(textured, {
-                ambient: 0.9,
-                diffusivity: 0.9,
-                texture: new Texture("assets/wood2.jpg"),
-            }),
-
-      fish: new Material(new defs.Phong_Shader(), {
-        ambient: 0.7,
-        diffusivity: 0.6,
-        color: hex_color("800080"),
+    this.materials = {
+      water: new Material(textured, {
+        smoothness: 64,
+        ambient: 0.8,
+        texture: new Texture("assets/ocean.png"),
       }),
-      fish2: new Material(new defs.Phong_Shader(), {
-        ambient: 0.7,
-        diffusivity: 0.6,
-        color: hex_color("#FFA500"),
+      sand: new Material(textured, {
+        ambient: 0.6,
+        diffusivity: 0.9,
+        color: hex_color("#ffaf40"),
+        smoothness: 64,
+        texture: new Texture("assets/sand3.png"),
+        light_depth_texture: null,
+      }),
+      sky: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 1,
+        color: hex_color("#87CEEB"),
+        texture: new Texture("assets/sky_three.jpeg"),
+      }),
+      wood: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 0.9,
+        texture: new Texture("assets/wood2.jpg"),
       }),
       fish3: new Material(new defs.Phong_Shader(), {
-        ambient: 0.7,
-        diffusivity: 0.6,
-        color: hex_color("#00FF00"),
+        ambient: 1,
+        diffusivity: 1,
+        color: hex_color("#FF0000"),
       }),
       fish4: new Material(new defs.Phong_Shader(), {
         ambient: 0.7,
@@ -129,6 +125,30 @@ export class FishyMan extends Scene {
     this.hasPositioned = false;
 
     console.log(this.initial_camera_location);
+
+    this.fish_positions = [];
+    this.fish_transforms = [];
+    this.color_array = [];
+    this.deltas = []; // [x, y, next_t]
+    // spawn fish
+    for (let i = 0; i <= 100; i++) {
+      let randomX = getRandomNumber(-100, 100);
+      while (randomX <= 10 && randomX >= -10) {
+        randomX = getRandomNumber(-100, 100);
+      }
+      let randomY = getRandomNumber(-100, 100);
+      while (randomY <= 10 && randomY >= -10) {
+        randomY = getRandomNumber(-100, 100);
+      }
+
+      this.deltas.push([0,0,0]);
+
+      this.color_array.push(getRandomColor());
+      this.fish_positions.push(vec3(randomX, randomY, 2.7));
+      this.fish_transforms.push(Mat4.identity()
+        .times(Mat4.translation(randomX, randomY, 2.7))
+        .times(Mat4.scale(Math.random() + 0.8, Math.random() + 0.8, Math.random() + 0.8)));
+    }
   }
 
   make_control_panel() {
@@ -265,31 +285,30 @@ export class FishyMan extends Scene {
       }
     }
 
-    let fish_transform = model_transform
-      .times(Mat4.translation(10, 0, -20))
-      .times(Mat4.scale(2, 2, 2))
-      .times(Mat4.rotation(t * 4, Math.PI, 1, 0, 0))
-      .times(Mat4.translation(7, 0, 5));
+    for (let i = 0; i <= 100; i++) {
+      //store old t, change dir at new t generated
+      if (Math.floor(t) == Math.floor(this.deltas[i][2])) {
+        this.deltas[i][0] = getRandomNumber(-1, 1);
+        this.deltas[i][1] = getRandomNumber(-1, 1);
+        this.deltas[i][2] = t + getRandomNumber(1,3);
+      }
+      let new_x = this.fish_positions[i][0] + this.deltas[i][0] * dt * 4;
+      let new_y = this.fish_positions[i][1] + this.deltas[i][1] * dt * 4;
+      this.fish_positions[i][0] = new_x;
+      this.fish_positions[i][1] = new_y;
+      // Update the translation part of the fish transformation
+      this.fish_transforms[i] = Mat4.identity()
+        .times(Mat4.translation(new_x, new_y, 2.7));
 
-    this.shapes.fish.draw(
-      context,
-      program_state,
-      fish_transform,
-      this.materials.fish
-    );
-
-    let fish_transform2 = model_transform
-      .times(Mat4.translation(100, 0, -120))
-      .times(Mat4.scale(2, 2, 2))
-      .times(Mat4.rotation(t2 * 4, Math.PI, 1, 0, 0))
-      .times(Mat4.translation(7, 0, 5));
-
-    this.shapes.fish.draw(
-      context,
-      program_state,
-      fish_transform2,
-      this.materials.fish2
-    );
+      this.shapes.fish.draw(
+        context,
+        program_state,
+        this.fish_transforms[i],
+        this.materials.fish3.override({
+          color: this.color_array[i]
+        })
+      );
+    }
 
     let fish_transform3 = model_transform
       .times(Mat4.translation(30, -25, 5))
@@ -330,7 +349,6 @@ export class FishyMan extends Scene {
     );
 
     let box_1_rad = (Math.PI / 100) * dt;
-
     this.ocean_transform = this.ocean_transform.times(
       Mat4.rotation(box_1_rad, 1, 0, 0)
     );
@@ -344,10 +362,10 @@ export class FishyMan extends Scene {
       })
     );
 
-        // Draw sand sphere
-        let sand_transform = model_transform
-            .times(Mat4.translation(2, 2, 2))
-            .times(Mat4.scale(20, 20, 3));
+    // Draw sand sphere
+    let sand_transform = model_transform
+      .times(Mat4.translation(2, 2, 2))
+      .times(Mat4.scale(20, 20, 3));
 
     this.shapes.sphere.draw(
       context,
@@ -355,6 +373,7 @@ export class FishyMan extends Scene {
       sand_transform,
       this.materials.sand
     );
+
     let tree_transform = model_transform
       .times(Mat4.translation(5, 5, 10)) // Set the position of the tree
       .times(Mat4.scale(2, 2, 2)) // Set the scale of the tree
