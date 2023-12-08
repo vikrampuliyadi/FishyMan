@@ -46,31 +46,31 @@ export class FishyMan extends Scene {
 
     const textured = new Textured_Phong(1);
 
-        this.materials = {
-            water: new Material(textured, {
-                smoothness: 64,
-                ambient: 0.8,
-                texture: new Texture("assets/ocean.png"),
-            }),
-            sand: new Material(textured, {
-                ambient: 0.6,
-                diffusivity: 0.9,
-                color: hex_color("#ffaf40"),
-                smoothness: 64,
-                texture: new Texture("assets/sand3.png"),
-                light_depth_texture: null,
-            }),
-            sky: new Material(textured, {
-                ambient: 0.9,
-                diffusivity: 1,
-                color: hex_color("#87CEEB"),
-                texture: new Texture("assets/sky_three.jpeg"),
-            }),
-            wood: new Material(textured, {
-                ambient: 0.9,
-                diffusivity: 0.9,
-                texture: new Texture("assets/wood2.jpg"),
-            }),
+    this.materials = {
+      water: new Material(textured, {
+        smoothness: 64,
+        ambient: 0.8,
+        texture: new Texture("assets/ocean.png"),
+      }),
+      sand: new Material(textured, {
+        ambient: 0.6,
+        diffusivity: 0.9,
+        color: hex_color("#ffaf40"),
+        smoothness: 64,
+        texture: new Texture("assets/sand3.png"),
+        light_depth_texture: null,
+      }),
+      sky: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 1,
+        color: hex_color("#87CEEB"),
+        texture: new Texture("assets/sky_three.jpeg"),
+      }),
+      wood: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 0.9,
+        texture: new Texture("assets/wood2.jpg"),
+      }),
 
       fish: new Material(new defs.Phong_Shader(), {
         ambient: 0.7,
@@ -344,10 +344,10 @@ export class FishyMan extends Scene {
       })
     );
 
-        // Draw sand sphere
-        let sand_transform = model_transform
-            .times(Mat4.translation(2, 2, 2))
-            .times(Mat4.scale(20, 20, 3));
+    // Draw sand sphere
+    let sand_transform = model_transform
+      .times(Mat4.translation(2, 2, 2))
+      .times(Mat4.scale(20, 20, 3));
 
     this.shapes.sphere.draw(
       context,
