@@ -46,8 +46,8 @@ export class FishermanScene extends Scene {
                 color: hex_color("#A3C4EB"), // Dark gray
             }),
             legs: new Material(new defs.Phong_Shader(), {
-              ambient: 0.8,
-              color: hex_color("#FFFFFF"), // Dark gray
+                ambient: 0.8,
+                color: hex_color("#FFFFFF"), // Dark gray
             }),
             head: new Material(new defs.Phong_Shader(), {
                 ambient: 0.8,
@@ -112,7 +112,7 @@ export class FishermanScene extends Scene {
 
         // Apply translation to move the entire figure up
         let model_transform = Mat4.rotation(Math.PI / 2, 1, 0, 0).times(
-            Mat4.translation(0, 6, 7).times(Mat4.scale(.6, 0.6, 0.6))
+            Mat4.translation(0, 6, 7).times(Mat4.scale(0.6, 0.6, 0.6))
         );
 
         this.drawStickFigure(context, program_state, model_transform);
@@ -159,25 +159,25 @@ export class FishermanScene extends Scene {
 
         // Draw left_leg
         let left_leg_transform = model_transform
-          .times(Mat4.translation(0.7, -1, 0))
-          .times(Mat4.scale(0.5, 1, 0.5));
+            .times(Mat4.translation(0.7, -1, 0))
+            .times(Mat4.scale(0.5, 1, 0.5));
         this.shapes.legs.draw(
-          context,
-          program_state,
-          left_leg_transform,
-          this.materials.legs
+            context,
+            program_state,
+            left_leg_transform,
+            this.materials.legs
         );
 
-      // Draw right_leg
-      let right_leg_transform = model_transform
-        .times(Mat4.translation(-.7, -1, 0))
-        .times(Mat4.scale(0.5, 1, 0.5));
-      this.shapes.legs.draw(
-        context,
-        program_state,
-        right_leg_transform,
-        this.materials.legs
-      );
+        // Draw right_leg
+        let right_leg_transform = model_transform
+            .times(Mat4.translation(-0.7, -1, 0))
+            .times(Mat4.scale(0.5, 1, 0.5));
+        this.shapes.legs.draw(
+            context,
+            program_state,
+            right_leg_transform,
+            this.materials.legs
+        );
 
         // Draw left arm
         this.left_arm_transform = model_transform
@@ -205,7 +205,7 @@ export class FishermanScene extends Scene {
             translation_distance // Z-coordinate (no depth movement)
         );
         this.right_arm_transform = model_transform
-            .times(Mat4.translation(2, 2.5, 0.25)) // Translate back to the original position
+            .times(Mat4.translation(2, 3, 0)) // Translate back to the original position
             .times(right_arm_pivot_translation) // Move the pivot point
             .times(Mat4.rotation(right_arm_rotation_angle, 1, 0, 0)) // Rotate around the pivot
             .times(Mat4.scale(0.5, 1.5, 0.5));
@@ -224,7 +224,7 @@ export class FishermanScene extends Scene {
         this.shapes.leftFoot.draw(
             context,
             program_state,
-          left_foot_transform,
+            left_foot_transform,
             this.materials.limb
         );
 
@@ -236,7 +236,7 @@ export class FishermanScene extends Scene {
         this.shapes.rightFoot.draw(
             context,
             program_state,
-          right_foot_transform,
+            right_foot_transform,
             this.materials.limb
         );
     }
