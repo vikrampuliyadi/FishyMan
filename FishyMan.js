@@ -219,10 +219,10 @@ export class FishyMan extends Scene {
       this.fisherman.launchLure(desiredDistance, Math.PI / 4);
     });
     this.key_triggered_button("Increase Desired Distance", ["+"], () => {
-      this.slider_value = this.slider_value + 1; // Use the value from the slider
+      this.slider_value = this.slider_value + 0.5; // Use the value from the slider
     });
     this.key_triggered_button("Decrease Desired Distance", ["-"], () => {
-      this.slider_value = this.slider_value - 1; // Use the value from the slider
+      this.slider_value = this.slider_value - 0.5; // Use the value from the slider
     });
   }
 
