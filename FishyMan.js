@@ -164,13 +164,13 @@ export class FishyMan extends Scene {
     this.deltas = []; // [x, y, next_t]
     // spawn fish
     for (let i = 0; i <= 100; i++) {
-      let randomX = getRandomNumber(-70, 70);
+      let randomX = getRandomNumber(-30, 30);
       while (randomX <= 5 && randomX >= -5) {
-        randomX = getRandomNumber(-70, 70);
+        randomX = getRandomNumber(-30, 30);
       }
-      let randomY = getRandomNumber(-70, 70);
+      let randomY = getRandomNumber(-30, 30);
       while (randomY <= 5 && randomY >= -5) {
-        randomY = getRandomNumber(-70, 70);
+        randomY = getRandomNumber(-30, 30);
       }
 
       this.deltas.push([0, 0, 0]);
@@ -191,7 +191,7 @@ export class FishyMan extends Scene {
     });
 
     this.key_triggered_button("Go Fish!", ["t"], () => {
-      this.fisherman.launchLure(20, Math.PI / 4);
+      this.fisherman.launchLure(8, Math.PI / 4);
     });
 
     this.key_triggered_button("Return to Swinging", ["e"], () => {
@@ -207,8 +207,6 @@ export class FishyMan extends Scene {
       //this.isAnimation = false;
     });
   }
-
-
 
   display(context, program_state) {
     if (!context.scratchpad.controls) {
@@ -249,47 +247,47 @@ export class FishyMan extends Scene {
         // var sub_z = this.player_matrix[2][3];
 
         // Collision Detection?
-        var sub_x = 0;
-        var sub_y = 0;
-        var sub_z = -40;
+        // var sub_x = 0;
+        // var sub_y = 0;
+        // var sub_z = -40;
 
-        for (let b = 0; b < this.fish.length; b++) {
-          let fish_position = this.fish[b];
-          let fish_x = fish_position[0];
-          let fish_y = fish_position[1];
-          let fish_z = fish_position[2];
-          // console.log(fish_x, fish_y, fish_z);
+        // for (let b = 0; b < this.fish.length; b++) {
+        //   let fish_position = this.fish[b];
+        //   let fish_x = fish_position[0];
+        //   let fish_y = fish_position[1];
+        //   let fish_z = fish_position[2];
+        //   // console.log(fish_x, fish_y, fish_z);
 
-          // Collision between fish and wildlife
-          // console.log(
-          //   Math.abs(sub_x - fish_x),
-          //   Math.abs(sub_y - fish_y),
-          //   Math.abs(sub_z - fish_z)
-          // );
-          // if (
-          //   Math.abs(sub_x - fish_x) <= 10 &&
-          //   Math.abs(sub_y - fish_y) <= 10 &&
-          //   Math.abs(0 - 0) <= 10
-          // ) {
-          if (Math.abs(0) <= 10 && Math.abs(0) <= 10 && Math.abs(0 - 0) <= 10) {
-            // console.log("Collision detected. Creating a new fish.");
-            // If collision, create a new fish at the same position
-            let new_fish_position = vec3(fish_x, fish_y, fish_z); // You might want to generate new coordinates here
+        //   // Collision between fish and wildlife
+        //   // console.log(
+        //   //   Math.abs(sub_x - fish_x),
+        //   //   Math.abs(sub_y - fish_y),
+        //   //   Math.abs(sub_z - fish_z)
+        //   // );
+        //   // if (
+        //   //   Math.abs(sub_x - fish_x) <= 10 &&
+        //   //   Math.abs(sub_y - fish_y) <= 10 &&
+        //   //   Math.abs(0 - 0) <= 10
+        //   // ) {
+        //   if (Math.abs(0) <= 10 && Math.abs(0) <= 10 && Math.abs(0 - 0) <= 10) {
+        //     // console.log("Collision detected. Creating a new fish.");
+        //     // If collision, create a new fish at the same position
+        //     let new_fish_position = vec3(fish_x, fish_y, fish_z); // You might want to generate new coordinates here
 
-            let collision_fish_transform = model_transform
-              // .times(Mat4.translation(new_fish_position)
-              .times(Mat4.translation(fish_x, fish_y, fish_z))
-              .times(Mat4.translation(1, -60, 1));
+        //     let collision_fish_transform = model_transform
+        //       // .times(Mat4.translation(new_fish_position)
+        //       .times(Mat4.translation(fish_x, fish_y, fish_z))
+        //       .times(Mat4.translation(1, -60, 1));
 
-            this.shapes.fish.draw(
-              context,
-              program_state,
-              collision_fish_transform,
-              this.materials.fish3
-            );
-            this.fish[b] = new_fish_position;
-          }
-        }
+        //     this.shapes.fish.draw(
+        //       context,
+        //       program_state,
+        //       collision_fish_transform,
+        //       this.materials.fish3
+        //     );
+        //     this.fish[b] = new_fish_position;
+        //   }
+        // }
 
         // Draw water background
         let background_transform = model_transform.times(Mat4.scale(200, 200, 200));
@@ -371,7 +369,7 @@ export class FishyMan extends Scene {
         //users do freely with camera
       }
     }
-    
+
     if (this.caught_fish_nums.length > 0) {
       for (let i = 0; i < this.caught_fish_nums.length; i++) {
         let caught_fish_transform = Mat4.identity().times(Mat4.translation(0, 0, i + 5));
@@ -397,7 +395,7 @@ export class FishyMan extends Scene {
           this.materials.fish3.override({
             color: this.color_array[i]
           })
-          
+
         );
         this.caught_fish_num = -1;
         continue;
@@ -431,19 +429,21 @@ export class FishyMan extends Scene {
     }
 
     // collision detection
-    for (let i = 0; i <= 100; i++) {
-      if (this.caught_fish_nums.includes(i)) {
-        continue;
-      }
-      const distance = Math.sqrt((this.fish_positions[i][0] - lure_position[0])**2 + (this.fish_positions[i][1] - lure_position[1])**2);
-      if (distance <= 6) {
-        let curr_fish = this.fish_positions[i];
-        curr_fish[0] = lure_position[0];
-        curr_fish[1] = lure_position[1];
-        this.caught_fish_num = i;
-        this.caught_fish_nums.push(i);
-        this.fisherman.setCaught(true);
-        break;
+    if (lure_position[2] <= 3.3) {
+      for (let i = 0; i <= 100; i++) {
+        if (this.caught_fish_nums.includes(i)) {
+          continue;
+        }
+        const distance = Math.sqrt((this.fish_positions[i][0] - lure_position[0]) ** 2 + (this.fish_positions[i][1] - lure_position[1]) ** 2 + (this.fish_positions[i][2] - lure_position[2]) ** 2);
+        if (distance <= 6) {
+          let curr_fish = this.fish_positions[i];
+          curr_fish[0] = lure_position[0];
+          curr_fish[1] = lure_position[1];
+          this.caught_fish_num = i;
+          this.caught_fish_nums.push(i);
+          this.fisherman.setCaught(true);
+          break;
+        }
       }
     }
 
