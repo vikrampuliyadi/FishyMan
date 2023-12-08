@@ -15,31 +15,38 @@ const {
 } = tiny;
 
 const { Cube, Subdivision_Sphere, Textured_Phong, Textured_Phong_Shader } =
-  defs;
-
+    defs;
+// let isSwinging = true;
 export class FishermanScene extends Scene {
   constructor() {
     super();
 
-    this.shapes = {
-      //fisherman
-      head: new Subdivision_Sphere(3),
-      torso: new Cube(),
-      leftArm: new Cube(),
-      rightArm: new Cube(),
-      legs: new Cube(),
-      leftFoot: new Cube(),
-      rightFoot: new Cube(),
+        this.isSwinging = true;
+        this.swingingStartPosition = null;
+        this.lastTranslationDistanceX = 0;
+        this.lastTranslationDistanceY = 0;
+        this.lastTranslationDistanceZ = 0;
+        this.lastRotationAngle = 0;
 
-      //fishing rod
-      handle: new Subdivision_Sphere(4),
-      shaft: new Subdivision_Sphere(4),
-      lure: new Subdivision_Sphere(4),
-      string: new defs.Cylindrical_Tube(3, 30, [
-        [0, 1],
-        [0, 1],
-      ]),
-    };
+        this.shapes = {
+            //fisherman
+            head: new Subdivision_Sphere(3),
+            torso: new Cube(),
+            leftArm: new Cube(),
+            rightArm: new Cube(),
+            legs: new Cube(),
+            leftFoot: new Cube(),
+            rightFoot: new Cube(),
+
+            //fishing rod
+            handle: new Subdivision_Sphere(4),
+            shaft: new Subdivision_Sphere(4),
+            lure: new Subdivision_Sphere(4),
+            string: new defs.Cylindrical_Tube(3, 30, [
+                [0, 1],
+                [0, 1],
+            ]),
+        };
 
     const phong_shader = new Textured_Phong(1);
 
@@ -122,22 +129,41 @@ export class FishermanScene extends Scene {
     this.drawFishingRod(context, program_state, model_transform);
   }
 
-  // drawFishingRod(context, program_state, model_transform) {
-  //     // draw fishing rod
-  //     const t = program_state.animation_time / 1000;
-
-  //     //let handle_transform = Mat4.identity().times(Mat4.translation(0, 0, 8)).times(Mat4.scale(0.5, 0.5, 1.5));
-  //     let handle_transform = this.right_arm_transform.times(Mat4.translation(0,1.2,0)).times(Mat4.scale(1,0.2,1.5));
-  //     let shaft_transform = handle_transform.times(Mat4.translation(0,0,-4)).times(Mat4.scale(0.4, 0.4, 5));
-  //     let lure_transform = shaft_transform.times(Mat4.translation(0,-7,0)).times(Mat4.scale(1,1,0.05));
-
-  //     this.shapes.handle.draw(context, program_state, handle_transform, this.materials.rod);
-  //     this.shapes.shaft.draw(context, program_state, shaft_transform, this.materials.rod);
-  //     //lure_transform = lure_transform.times(Mat4.rotation(t * 10, 0, 0, 1)).times(Mat4.translation(0, 4, 0));
-  //     this.shapes.lure.draw(context, program_state, lure_transform, this.materials.lure);
-  // }
   drawFishingRod(context, program_state, model_transform) {
-    const t = program_state.animation_time / 1000;
+      // draw fishing rod
+      const t = program_state.animation_time / 1000;
+
+        //let handle_transform = Mat4.identity().times(Mat4.translation(0, 0, 8)).times(Mat4.scale(0.5, 0.5, 1.5));
+        let handle_transform = this.right_arm_transform
+            .times(Mat4.translation(0, 1.2, 0))
+            .times(Mat4.scale(1, 0.2, 1.5));
+        let shaft_transform = handle_transform
+            .times(Mat4.translation(0, 0, -4))
+            .times(Mat4.scale(0.4, 0.4, 5));
+        let lure_transform = shaft_transform
+            .times(Mat4.translation(2, -2, -1))
+            .times(Mat4.scale(1, 1, 0.05));
+
+        this.shapes.handle.draw(
+            context,
+            program_state,
+            handle_transform,
+            this.materials.rod
+        );
+        this.shapes.shaft.draw(
+            context,
+            program_state,
+            shaft_transform,
+            this.materials.rod
+        );
+        //lure_transform = lure_transform.times(Mat4.rotation(t * 10, 0, 0, 1)).times(Mat4.translation(0, 4, 0));
+        this.shapes.lure.draw(
+            context,
+            program_state,
+            lure_transform,
+            this.materials.lure
+        );
+    }
 
     // Set a fixed path for the lure
     const lure_path = vec3(0, 0, -0.05); // Adjust the path as needed
