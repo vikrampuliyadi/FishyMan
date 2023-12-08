@@ -189,7 +189,7 @@ export class FishyMan extends Scene {
     });
 
     this.key_triggered_button("Toggle Swinging Motion", ["t"], () => {
-      this.fisherman.toggleSwingingMotion();
+      this.fisherman.launchLure(10, Math.PI / 4);
     });
 
     this.key_triggered_button("Switch POV", ["Control", "1"], () => {
