@@ -46,31 +46,31 @@ export class FishyMan extends Scene {
 
     const textured = new Textured_Phong(1);
 
-        this.materials = {
-            water: new Material(textured, {
-                smoothness: 64,
-                ambient: 0.8,
-                texture: new Texture("assets/ocean.png"),
-            }),
-            sand: new Material(textured, {
-                ambient: 0.6,
-                diffusivity: 0.9,
-                color: hex_color("#ffaf40"),
-                smoothness: 64,
-                texture: new Texture("assets/sand3.png"),
-                light_depth_texture: null,
-            }),
-            sky: new Material(textured, {
-                ambient: 0.9,
-                diffusivity: 1,
-                color: hex_color("#87CEEB"),
-                texture: new Texture("assets/sky_three.jpeg"),
-            }),
-            wood: new Material(textured, {
-                ambient: 0.9,
-                diffusivity: 0.9,
-                texture: new Texture("assets/wood2.jpg"),
-            }),
+    this.materials = {
+      water: new Material(textured, {
+        smoothness: 64,
+        ambient: 0.8,
+        texture: new Texture("assets/ocean.png"),
+      }),
+      sand: new Material(textured, {
+        ambient: 0.6,
+        diffusivity: 0.9,
+        color: hex_color("#ffaf40"),
+        smoothness: 64,
+        texture: new Texture("assets/sand3.png"),
+        light_depth_texture: null,
+      }),
+      sky: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 1,
+        color: hex_color("#87CEEB"),
+        texture: new Texture("assets/sky_three.jpeg"),
+      }),
+      wood: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 0.9,
+        texture: new Texture("assets/wood2.jpg"),
+      }),
 
       fish: new Material(new defs.Phong_Shader(), {
         ambient: 0.7,
@@ -102,12 +102,33 @@ export class FishyMan extends Scene {
         color: hex_color("#000000"),
         ambient: 1.0,
 
-        texture: new Texture(
-          "assets/ocean.png",
-          "LINEAR_MIPMAP_LINEAR"
-        ),
+        texture: new Texture("assets/ocean.png", "LINEAR_MIPMAP_LINEAR"),
       }),
     };
+
+    let x,
+      y,
+      z,
+      s,
+      t = 0; // Add "let" before x, y, z, s
+    this.fish = [];
+    // console.log("JELLO");
+
+    const gridCenter = vec3(-15, -15, 2);
+    const gridWidth = 15;
+    const gridHeight = 15;
+
+    for (let i = 0; i < gridWidth; i++) {
+      for (let j = 0; j < gridHeight; j++) {
+        x = gridCenter[0] + i * 2; // Adjust the scale as needed
+        y = gridCenter[1] + j * 2; // Adjust the scale as needed
+        z = gridCenter[2];
+
+        // Populate the fish array with vector positions
+        console.log(x, y, z);
+        this.fish.push(vec3(x, y, z));
+      }
+    }
 
     this.light_view_target = vec4(0, 0, 0, 1);
 
@@ -133,14 +154,10 @@ export class FishyMan extends Scene {
 
   make_control_panel() {
     // TODO: Implement requirement #5 using a key_triggered_button that responds to the 'c' key.
-    this.key_triggered_button(
-      "Pause/Start Animation",
-      ["Control", "0"],
-      () => {
-        this.isAnimation = !this.isAnimation;
-        this.hasPositioned = false;
-      }
-    );
+    this.key_triggered_button("Pause/Start Animation", ["Control", "0"], () => {
+      this.isAnimation = !this.isAnimation;
+      this.hasPositioned = false;
+    });
 
     this.key_triggered_button("Switch POV", ["Control", "1"], () => {
       this.isAerial = !this.isAerial;
@@ -169,9 +186,7 @@ export class FishyMan extends Scene {
     );
 
     const light_position = vec4(-3, -18, -90, 0);
-    program_state.lights = [
-      new Light(light_position, color(1, 1, 1, 1), 1000),
-    ];
+    program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
 
     let t = program_state.animation_time / 1500,
       dt = program_state.animation_delta_time / 1500;
@@ -186,8 +201,7 @@ export class FishyMan extends Scene {
         const animationDuration = 30.0; // Adjust this duration as needed
 
         // Calculate the normalized time within the animation duration
-        let normalizedTime =
-          (t % animationDuration) / animationDuration;
+        let normalizedTime = (t % animationDuration) / animationDuration;
 
         // Use the normalized time to create an oscillating movement
         let angle = normalizedTime * 2 * Math.PI;
@@ -213,8 +227,7 @@ export class FishyMan extends Scene {
         const animationDuration = 30.0; // Adjust this duration as needed
 
         // Calculate the normalized time within the animation duration
-        let normalizedTime =
-          (t % animationDuration) / animationDuration;
+        let normalizedTime = (t % animationDuration) / animationDuration;
 
         // Use the normalized time to create a limited oscillating movement (45 degrees left to right)
         let maxAngle = Math.PI / 4; // 45 degrees
@@ -317,10 +330,56 @@ export class FishyMan extends Scene {
       this.materials.fish4
     );
 
+    //Collision Detection?
+    // var sub_x = this.player_matrix[0][3];
+    // var sub_y = this.player_matrix[1][3];
+    // var sub_z = this.player_matrix[2][3];
+
+    // Collision Detection?
+    var sub_x = 0;
+    var sub_y = 0;
+    var sub_z = -40;
+
+    for (let b = 0; b < this.fish.length; b++) {
+      let fish_position = this.fish[b];
+      let fish_x = fish_position[0];
+      let fish_y = fish_position[1];
+      let fish_z = fish_position[2];
+      // console.log(fish_x, fish_y, fish_z);
+
+      // Collision between fish and wildlife
+      // console.log(
+      //   Math.abs(sub_x - fish_x),
+      //   Math.abs(sub_y - fish_y),
+      //   Math.abs(sub_z - fish_z)
+      // );
+      // if (
+      //   Math.abs(sub_x - fish_x) <= 10 &&
+      //   Math.abs(sub_y - fish_y) <= 10 &&
+      //   Math.abs(0 - 0) <= 10
+      // ) {
+      if (Math.abs(0) <= 10 && Math.abs(0) <= 10 && Math.abs(0 - 0) <= 10) {
+        // console.log("Collision detected. Creating a new fish.");
+        // If collision, create a new fish at the same position
+        let new_fish_position = vec3(fish_x, fish_y, fish_z); // You might want to generate new coordinates here
+
+        let collision_fish_transform = model_transform
+          // .times(Mat4.translation(new_fish_position)
+          .times(Mat4.translation(fish_x, fish_y, fish_z))
+          .times(Mat4.translation(1, -60, 1));
+
+        this.shapes.fish.draw(
+          context,
+          program_state,
+          collision_fish_transform,
+          this.materials.fish3
+        );
+        this.fish[b] = new_fish_position;
+      }
+    }
+
     // Draw water background
-    let background_transform = model_transform.times(
-      Mat4.scale(200, 200, 200)
-    );
+    let background_transform = model_transform.times(Mat4.scale(200, 200, 200));
 
     this.shapes.sphere.draw(
       context,
@@ -344,10 +403,10 @@ export class FishyMan extends Scene {
       })
     );
 
-        // Draw sand sphere
-        let sand_transform = model_transform
-            .times(Mat4.translation(2, 2, 2))
-            .times(Mat4.scale(20, 20, 3));
+    // Draw sand sphere
+    let sand_transform = model_transform
+      .times(Mat4.translation(2, 2, 2))
+      .times(Mat4.scale(20, 20, 3));
 
     this.shapes.sphere.draw(
       context,
@@ -368,7 +427,6 @@ export class FishyMan extends Scene {
     );
 
     this.fisherman.display(context, program_state);
-
   }
 }
 
