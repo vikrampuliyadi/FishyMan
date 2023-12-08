@@ -1,6 +1,13 @@
 import { defs, tiny } from "./examples/common.js";
 import { Shape_From_File } from "./examples/obj-file-demo.js";
 import { FishermanScene } from "./FishermanScene.js";
+import {
+  Color_Phong_Shader,
+  Shadow_Textured_Phong_Shader,
+  Depth_Texture_Shader_2D,
+  Buffered_Texture,
+  LIGHT_DEPTH_TEX_SIZE,
+} from "./examples/shadow-demo-shaders.js";
 
 const {
   Vector,
@@ -46,31 +53,43 @@ export class FishyMan extends Scene {
 
     const textured = new Textured_Phong(1);
 
-        this.materials = {
-            water: new Material(textured, {
-                smoothness: 64,
-                ambient: 0.8,
-                texture: new Texture("assets/ocean.png"),
-            }),
-            sand: new Material(textured, {
-                ambient: 0.6,
-                diffusivity: 0.9,
-                color: hex_color("#ffaf40"),
-                smoothness: 64,
-                texture: new Texture("assets/sand3.png"),
-                light_depth_texture: null,
-            }),
-            sky: new Material(textured, {
-                ambient: 0.9,
-                diffusivity: 1,
-                color: hex_color("#87CEEB"),
-                texture: new Texture("assets/sky_three.jpeg"),
-            }),
-            wood: new Material(textured, {
-                ambient: 0.9,
-                diffusivity: 0.9,
-                texture: new Texture("assets/wood2.jpg"),
-            }),
+    const shadow_tex = new Shadow_Textured_Phong_Shader(1);
+
+    this.materials = {
+      water: new Material(textured, {
+        smoothness: 64,
+        ambient: 0.8,
+        texture: new Texture("assets/ocean.png"),
+      }),
+
+      // sand: new Material(shadow_tex, {
+      //   ambient: 0.3,
+      //   diffusivity: 0.9,
+      //   color: hex_color("#ffaf40"),
+      //   smoothness: 64,
+      //   color_texture: new Texture("assets/sand3.png"),
+      //   light_depth_texture: null,
+      // }),
+      sand: new Material(textured, {
+        ambient: 0.6,
+        diffusivity: 0.9,
+        color: hex_color("#ffaf40"),
+        smoothness: 64,
+        texture: new Texture("assets/sand3.png"),
+        light_depth_texture: null,
+      }),
+
+      sky: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 1,
+        color: hex_color("#87CEEB"),
+        texture: new Texture("assets/sky_three.jpeg"),
+      }),
+      wood: new Material(textured, {
+        ambient: 0.9,
+        diffusivity: 0.9,
+        texture: new Texture("assets/wood2.jpg"),
+      }),
 
       fish: new Material(new defs.Phong_Shader(), {
         ambient: 0.7,
@@ -93,6 +112,10 @@ export class FishyMan extends Scene {
         color: hex_color("#FF0000"),
       }),
 
+      tree_new: new Material(new Shadow_Textured_Phong_Shader(1), {
+        ambient: 0.3,
+        diffusivity: 0.9,
+      }),
       tree: new Material(textured, {
         ambient: 0.7,
         diffusivity: 0.6,
@@ -102,12 +125,22 @@ export class FishyMan extends Scene {
         color: hex_color("#000000"),
         ambient: 1.0,
 
-        texture: new Texture(
-          "assets/ocean.png",
-          "LINEAR_MIPMAP_LINEAR"
-        ),
+        texture: new Texture("assets/ocean.png", "LINEAR_MIPMAP_LINEAR"),
       }),
     };
+
+    //shadow stuff
+    this.pure = new Material(new Color_Phong_Shader(), {});
+    this.shadow_pass = false;
+
+    this.floor = new Material(new Shadow_Textured_Phong_Shader(1), {
+      ambient: 0.3,
+      diffusivity: 0.9,
+      color: hex_color("#ffaf40"),
+      smoothness: 64,
+      texture: new Texture("assets/sand3.png"),
+      light_depth_texture: null,
+    });
 
     this.light_view_target = vec4(0, 0, 0, 1);
 
@@ -128,19 +161,38 @@ export class FishyMan extends Scene {
     this.isAerial = true;
     this.hasPositioned = false;
 
+    this.light_position = vec4(-3, -18, -90, 0);
+    this.light_view_target = vec4(0, 0, 1, 1);
+    this.light_field_of_view = (90 * Math.PI) / 180; // 130 degree
+    this.light_view_mat = Mat4.look_at(
+      vec3(
+        this.light_position[0],
+        this.light_position[1],
+        this.light_position[2]
+      ),
+      vec3(
+        this.light_view_target[0],
+        this.light_view_target[1],
+        this.light_view_target[2]
+      ),
+      vec3(0, 1, 0) // assume the light to target will have a up dir of +y, maybe need to change according to your case
+    );
+    this.light_proj_mat = Mat4.perspective(
+      this.light_field_of_view,
+      1,
+      0.5,
+      500
+    );
+
     console.log(this.initial_camera_location);
   }
 
   make_control_panel() {
     // TODO: Implement requirement #5 using a key_triggered_button that responds to the 'c' key.
-    this.key_triggered_button(
-      "Pause/Start Animation",
-      ["Control", "0"],
-      () => {
-        this.isAnimation = !this.isAnimation;
-        this.hasPositioned = false;
-      }
-    );
+    this.key_triggered_button("Pause/Start Animation", ["Control", "0"], () => {
+      this.isAnimation = !this.isAnimation;
+      this.hasPositioned = false;
+    });
 
     this.key_triggered_button("Switch POV", ["Control", "1"], () => {
       this.isAerial = !this.isAerial;
@@ -153,6 +205,72 @@ export class FishyMan extends Scene {
   }
 
   display(context, program_state) {
+    const gl = context.context;
+
+    this.lightDepthTexture = gl.createTexture();
+    // Bind it to TinyGraphics
+    this.light_depth_texture = new Buffered_Texture(this.lightDepthTexture);
+    this.floor.light_depth_texture = this.light_depth_texture;
+
+    this.lightDepthTextureSize = LIGHT_DEPTH_TEX_SIZE;
+    gl.bindTexture(gl.TEXTURE_2D, this.lightDepthTexture);
+    gl.texImage2D(
+      gl.TEXTURE_2D, // target
+      0, // mip level
+      gl.DEPTH_COMPONENT, // internal format
+      this.lightDepthTextureSize, // width
+      this.lightDepthTextureSize, // height
+      0, // border
+      gl.DEPTH_COMPONENT, // format
+      gl.UNSIGNED_INT, // type
+      null
+    ); // data
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    // Depth Texture Buffer
+    this.lightDepthFramebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, // target
+      gl.DEPTH_ATTACHMENT, // attachment point
+      gl.TEXTURE_2D, // texture target
+      this.lightDepthTexture, // texture
+      0
+    ); // mip level
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    // // create a color texture of the same size as the depth texture
+    // // see article why this is needed_
+    // this.unusedTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.unusedTexture);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      this.lightDepthTextureSize,
+      this.lightDepthTextureSize,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      null
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // attach it to the framebuffer
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, // target
+      gl.COLOR_ATTACHMENT0, // attachment point
+      gl.TEXTURE_2D, // texture target
+      this.unusedTexture, // texture
+      0
+    ); // mip level
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
     if (!context.scratchpad.controls) {
       this.children.push(
         (context.scratchpad.controls = new defs.Movement_Controls())
@@ -168,10 +286,28 @@ export class FishyMan extends Scene {
       1000
     );
 
-    const light_position = vec4(-3, -18, -90, 0);
     program_state.lights = [
-      new Light(light_position, color(1, 1, 1, 1), 1000),
+      new Light(this.light_position, color(1, 1, 1, 1), 1000),
     ];
+    // const light_position = vec4(-3, -18, -90, 0);
+    // const light_view_target = vec4(0, 0, 1, 1);
+    // const light_field_of_view = (90 * Math.PI) / 180; // 130 degree
+    // const light_view_mat = Mat4.look_at(
+    //   vec3(light_position[0], light_position[1], light_position[2]),
+    //   vec3(light_view_target[0], light_view_target[1], light_view_target[2]),
+    //   vec3(0, 1, 0) // assume the light to target will have a up dir of +y, maybe need to change according to your case
+    // );
+    // const light_proj_mat = Mat4.perspective(light_field_of_view, 1, 0.5, 500);
+    // Bind the Depth Texture Buffer
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
+    // gl.viewport(0, 0, this.lightDepthTextureSize, this.lightDepthTextureSize);
+    // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // Prepare uniforms
+    program_state.light_view_mat = this.light_view_mat;
+    program_state.light_proj_mat = this.light_proj_mat;
+    program_state.light_tex_mat = this.light_proj_mat;
+    program_state.view_mat = this.light_view_mat;
+    program_state.projection_transform = this.light_proj_mat;
 
     let t = program_state.animation_time / 1500,
       dt = program_state.animation_delta_time / 1500;
@@ -186,8 +322,7 @@ export class FishyMan extends Scene {
         const animationDuration = 30.0; // Adjust this duration as needed
 
         // Calculate the normalized time within the animation duration
-        let normalizedTime =
-          (t % animationDuration) / animationDuration;
+        let normalizedTime = (t % animationDuration) / animationDuration;
 
         // Use the normalized time to create an oscillating movement
         let angle = normalizedTime * 2 * Math.PI;
@@ -213,8 +348,7 @@ export class FishyMan extends Scene {
         const animationDuration = 30.0; // Adjust this duration as needed
 
         // Calculate the normalized time within the animation duration
-        let normalizedTime =
-          (t % animationDuration) / animationDuration;
+        let normalizedTime = (t % animationDuration) / animationDuration;
 
         // Use the normalized time to create a limited oscillating movement (45 degrees left to right)
         let maxAngle = Math.PI / 4; // 45 degrees
@@ -318,9 +452,7 @@ export class FishyMan extends Scene {
     );
 
     // Draw water background
-    let background_transform = model_transform.times(
-      Mat4.scale(200, 200, 200)
-    );
+    let background_transform = model_transform.times(Mat4.scale(200, 200, 200));
 
     this.shapes.sphere.draw(
       context,
@@ -344,11 +476,16 @@ export class FishyMan extends Scene {
       })
     );
 
-        // Draw sand sphere
-        let sand_transform = model_transform
-            .times(Mat4.translation(2, 2, 2))
-            .times(Mat4.scale(20, 20, 3));
+    // Draw sand sphere
+    let sand_transform = model_transform
+      .times(Mat4.translation(2, 2, 2))
+      .times(Mat4.scale(20, 20, 3));
 
+    //this.shapes.sand.draw(context, program_state, sand_transform, this.floor);
+
+    // gpu_state.projection_transform
+    // .times(gpu_state.view_mat)
+    // .times(model_transform);
     this.shapes.sphere.draw(
       context,
       program_state,
@@ -360,6 +497,17 @@ export class FishyMan extends Scene {
       .times(Mat4.scale(2, 2, 2)) // Set the scale of the tree
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0)); // Rotate around the y-axis
 
+    let tree_transform_new = model_transform
+      .times(Mat4.translation(-5, -5, 0)) // Set the position of the tree
+      .times(Mat4.scale(2, 2, 2)) // Set the scale of the tree
+      .times(Mat4.rotation(Math.PI / 2, 0, 1, 0)); // Rotate around the y-axis
+
+    this.shapes.tree.draw(
+      context,
+      program_state,
+      tree_transform_new,
+      this.shadow_pass ? this.materials.tree_new : this.pure
+    );
     this.shapes.tree.draw(
       context,
       program_state,
@@ -367,8 +515,15 @@ export class FishyMan extends Scene {
       this.materials.tree
     );
 
-    this.fisherman.display(context, program_state);
+    // this.shapes.coral1.draw(
+    //   context,
+    //   program_state,
+    //   tree_transform,
+    //   this.shadow_pass ? this.materials.coral : this.pure
+    // );
+    // this.shadow_pass = !this.shadow_pass;
 
+    this.fisherman.display(context, program_state);
   }
 }
 
